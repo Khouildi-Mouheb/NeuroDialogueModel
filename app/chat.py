@@ -2,7 +2,7 @@ import sys
 import os
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse
 import logging
 
 # Configure logging
@@ -32,13 +32,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def read_root():
+    """Serve the chat HTML interface"""
+    try:
+        # Get the directory where chat.py is located
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        html_file_path = os.path.join(current_dir, "chat.html")
+        
+        # Read and return the HTML file
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        return HTMLResponse(content=html_content)
+    except FileNotFoundError:
+        # Fallback if chat.html is not found
+        return HTMLResponse(
+            content="""
+            <html>
+                <head><title>NeuroDialogue API</title></head>
+                <body style="font-family: Arial; padding: 40px; text-align: center;">
+                    <h1>🤖 NeuroDialogue Model API</h1>
+                    <p>Chat interface not found. Use the API endpoints instead:</p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 10px;"><a href="/health">/health</a> - Health check</li>
+                        <li style="margin: 10px;"><a href="/api-info">/api-info</a> - API information</li>
+                        <li style="margin: 10px;">/chat?text=your_message - Streaming chat</li>
+                        <li style="margin: 10px;">/chat_final?text=your_message - Complete chat response</li>
+                    </ul>
+                </body>
+            </html>
+            """,
+            status_code=200
+        )
+
+@app.get("/api-info")
+def api_info():
+    """Return API information as JSON"""
     return {
         "message": "NeuroDialogue Model API",
         "version": "1.0.0",
         "endpoints": {
+            "root": "/",
             "health": "/health",
+            "api_info": "/api-info",
             "chat_streaming": "/chat?text=your_message",
             "chat_complete": "/chat_final?text=your_message"
         }
