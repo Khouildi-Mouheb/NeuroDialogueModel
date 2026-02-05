@@ -1,7 +1,12 @@
 import os
+import sys
+
+# Fix paths before any imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from groq import Groq
-from core.context.generatorContext import GeneratorContext
-from .agent import Agent
+
+from infrastructure.agents.agent import Agent  # Changed from relative import
 
 class GeneratorAgent(Agent):
     def __init__(self, model_name: str = "deepseek-r1-distill-llama-70b"):
@@ -13,9 +18,9 @@ class GeneratorAgent(Agent):
         
         self.client = Groq(api_key=api_key)
 
-    def stream(self, context: GeneratorContext):
-        print(f'Starting stream with model: {self.model_name}')
-        prompt = context.format_context_for_prompt()
+    def stream(self, prompt: str):
+
+
 
         try:
             completion = self.client.chat.completions.create(
@@ -45,17 +50,11 @@ if __name__ == "__main__":
     print("🧪 Testing GeneratorAgent with Groq API...\n")
     
     try:
-        from core.domain.userQuery import UserQuery
-        
-        # Create a simple test query
-        query = UserQuery(text="What is AI? Answer in one sentence.")
-        context = GeneratorContext(user_query=query)
-        
-        # Initialize and test
+
         agent = GeneratorAgent()
         
         print("🤖 Response: ", end="", flush=True)
-        for token in agent.stream(context):
+        for token in agent.stream(prompt="What is AI? Answer in one sentence."):
             print(token, end="", flush=True)
         
         print("\n\n✅ Test completed successfully!")
