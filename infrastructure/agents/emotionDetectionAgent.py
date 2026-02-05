@@ -2,7 +2,6 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from infrastructure.agents.agent import Agent
 from core.domain.emotionResult import EmotionResult
-from core.domain.userQuery import UserQuery
 
 class EmotionDetectionAgent(Agent):
     def __init__(self,
@@ -21,9 +20,10 @@ class EmotionDetectionAgent(Agent):
             'relief', 'remorse', 'sadness', 'surprise','neutral'
         ]
     
-    def detect_emotions(self, userQuery : UserQuery, top_k=3) -> EmotionResult:
+    def detect_emotions(self, text : str, top_k=3) -> EmotionResult:
+        print('start detecting emotions ! ')
         emotionResult=EmotionResult()
-        inputs = self.tokenizer(userQuery.text, return_tensors="pt", truncation=True, max_length=512)
+        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
         
         # Get model predictions
         with torch.no_grad():

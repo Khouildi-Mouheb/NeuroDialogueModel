@@ -1,6 +1,8 @@
 from transformers import pipeline
+from typing import List
+from core.domain.intentAndNeedsResult import IntentAndNeedsResult
 
-class SmartIntentNeedsAgent:
+class IntentNeedsAgent:
 
     def __init__(self):
         self.intent_classifier = pipeline("text-classification", model="facebook/bart-large-mnli")
@@ -14,19 +16,25 @@ class SmartIntentNeedsAgent:
             "belonging/connection"
         ]
 
-    def analyze(self, text: str):
+    def analyze(self, text: str) -> IntentAndNeedsResult:
+        print('start analyzing the intent and needs!')
+        
         # Detect intent
         intent_result = self.intent_classifier(text, candidate_labels=self.intent_labels)
-        intent = intent_result[0]["label"]
-
+        
+        # Get top 3 intents with their scores
+        intents_list = []
+        for item in intent_result:
+            intents_list.append(item["label"])
+        
         # Detect psychological needs
         needs_result = self.needs_classifier(text, candidate_labels=self.needs_labels)
-        need = needs_result["labels"][0]
-
-        return {
-            "text": text,
-            "intent": intent,
-            "psychological_need": need
-        }
-
-
+        
+        # Get top 3 needs with their scores
+        needs_list = needs_result["labels"][:3]  # Top 3 needs
+        
+        # Create and return IntentAndNeedsResult object
+        return IntentAndNeedsResult(
+            intents=intents_list,
+            needs=needs_list
+        )

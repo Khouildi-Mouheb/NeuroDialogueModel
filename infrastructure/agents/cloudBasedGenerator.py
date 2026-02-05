@@ -17,7 +17,7 @@ class CloudBasedGenerator(GeneratorAgent):
         self.client = Groq(api_key=api_key)
 
     def stream(self, prompt: str):
-
+        print('start streaming ! ')
 
 
         try:
@@ -36,6 +36,7 @@ class CloudBasedGenerator(GeneratorAgent):
 
             for chunk in completion:
                 if chunk.choices[0].delta.content:
+                    print(chunk.choices[0].delta.content)
                     yield chunk.choices[0].delta.content
 
         except Exception as e:

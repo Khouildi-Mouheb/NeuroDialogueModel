@@ -42,5 +42,5 @@ class GeneratorContext(Context):
             for i, chunk in enumerate(self.retrieved_chunks, 1):
                 context_parts.append(f"Chunk {i}: {chunk.getText()}")
         if self.user_state:
-            context_parts.append(f"User State: {self.user_state}")
+            context_parts.append(f"User State: {self.user_state.__str__()}")
         return "\n\n".join(context_parts)
