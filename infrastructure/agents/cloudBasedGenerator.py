@@ -1,15 +1,13 @@
 import os
 import sys
-
-# Fix paths before any imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-
 from groq import Groq
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from infrastructure.agents.agent import Agent  # Changed from relative import
+from infrastructure.agents.generatorAgent import GeneratorAgent
 
-class GeneratorAgent(Agent):
-    def __init__(self, model_name: str = "deepseek-r1-distill-llama-70b"):
+class CloudBasedGenerator(GeneratorAgent):
+    def __init__(self, model_name: str = "llama-3.3-70b-versatile"):
         self.model_name = model_name
         api_key = os.getenv("GROQ_API_KEY", "REDACTED")
         
@@ -45,19 +43,3 @@ class GeneratorAgent(Agent):
             yield f"[ERROR] {str(e)}"
 
 
-if __name__ == "__main__":
-    # Quick test
-    print("🧪 Testing GeneratorAgent with Groq API...\n")
-    
-    try:
-
-        agent = GeneratorAgent()
-        
-        print("🤖 Response: ", end="", flush=True)
-        for token in agent.stream(prompt="What is AI? Answer in one sentence."):
-            print(token, end="", flush=True)
-        
-        print("\n\n✅ Test completed successfully!")
-        
-    except Exception as e:
-        print(f"❌ Error: {str(e)}")
