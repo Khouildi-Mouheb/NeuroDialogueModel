@@ -9,7 +9,7 @@ from infrastructure.agents.generatorAgent import GeneratorAgent
 class CloudBasedGenerator(GeneratorAgent):
     def __init__(self, model_name: str = "llama-3.3-70b-versatile"):
         self.model_name = model_name
-        api_key = os.getenv("GROQ_API_KEY", "REDACTED")
+        api_key = os.getenv("GROQ_API_KEY")
         
         if not api_key:
             raise ValueError("GROQ_API_KEY environment variable not set!")
