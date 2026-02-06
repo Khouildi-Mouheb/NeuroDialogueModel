@@ -1,6 +1,9 @@
 import os
 import sys
 from groq import Groq
+from dotenv import load_dotenv  
+
+load_dotenv()  
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from infrastructure.agents.agent import Agent  # Changed from relative import
