@@ -7,7 +7,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from infrastructure.agents.agent import Agent  # Changed from relative import
-from infrastructure.agents.generatorAgent import GeneratorAgent
+from generation.agents.generatorAgent import GeneratorAgent
 
 class CloudBasedGenerator(GeneratorAgent):
     def __init__(self, model_name: str = "llama-3.3-70b-versatile"):

@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from core.context.generatorContext import GeneratorContext
-from .agent import Agent
+from ...infrastructure.agents.agent import Agent
 
 class GeneratorAgent(Agent):
 

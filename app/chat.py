@@ -15,9 +15,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from core.domain.userQuery import UserQuery
 from core.domain.userState import UserState
 from core.context.generatorContext import GeneratorContext
-from infrastructure.agents.cloudBasedGenerator import CloudBasedGenerator
-from infrastructure.agents.emotionDetectionAgent import EmotionDetectionAgent
-from infrastructure.agents.intentAndNeedsAgent import IntentNeedsAgent
+from generation.agents.cloudBasedGenerator import CloudBasedGenerator
+#from infrastructure.agents.emotionDetectionAgent import EmotionDetectionAgent
+#from infrastructure.agents.intentAndNeedsAgent import IntentNeedsAgent
 
 # Create FastAPI app
 app = FastAPI(
@@ -37,8 +37,8 @@ app.add_middleware(
 
 # Initialize agents
 generator = CloudBasedGenerator()
-emotionsDetector = EmotionDetectionAgent()
-intentAndNeedsDetector = IntentNeedsAgent()
+#emotionsDetector = EmotionDetectionAgent()
+#intentAndNeedsDetector = IntentNeedsAgent()
 
 @app.get("/")
 def read_root():
@@ -63,15 +63,17 @@ def chat_final(text: str = Query(..., min_length=1, max_length=2000)):
         
         # Detect emotions
         logger.info("Detecting emotions...")
-        emotionsResult = emotionsDetector.detect_emotions(query, top_k=3)
+        #emotionsResult = emotionsDetector.detect_emotions(query, top_k=3)
+        emotionsResult = emotionsResult()
         
         # Analyze intent
         logger.info("Analyzing intent...")
-        intentAndNeedsResult = intentAndNeedsDetector.analyze(text)
+        #intentAndNeedsResult = intentAndNeedsDetector.analyze(text)
+        intentAndNeedsResult=intentAndNeedsResult()
         
         # Create user state
-        userState = UserState(emotions=emotionsResult)
-        
+        #userState = UserState(emotions=emotionsResult)
+        userState = UserState()
         # Create generator context
         generatorContext = GeneratorContext(
             user_query=query,
