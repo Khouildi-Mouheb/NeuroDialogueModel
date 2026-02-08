@@ -1,6 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
-from infrastructure.agents.agent import Agent
+from core.domain.agent import Agent
 from core.domain.emotionResult import EmotionResult
 
 class EmotionDetectionAgent(Agent):

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()  
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-from infrastructure.agents.agent import Agent  # Changed from relative import
+from core.domain.agent import Agent  # Changed from relative import
 from generation.agents.generatorAgent import GeneratorAgent
 
 class CloudBasedGenerator(GeneratorAgent):
