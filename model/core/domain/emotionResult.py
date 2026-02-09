@@ -9,6 +9,7 @@ class EmotionResult :
         self.emotionsWithScore =emotionsWithScore
 
 
+
     def __str__(self):
         return f"the emotions are : {self.emotions}"
 
