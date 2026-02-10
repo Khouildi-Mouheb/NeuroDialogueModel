@@ -50,3 +50,33 @@ class ChromaDBVectorStore(VectorStore):
             }
             for i in range(len(results["ids"][0]))
         ]
+    
+
+
+    def deleteDocument(self, document_id: str) -> int:
+        """
+        Delete all chunks from a specific document
+        
+        Args:
+            document_id: The document ID to delete
+            
+        Returns:
+            Number of chunks deleted
+        """
+        # First, query to get count of chunks to be deleted
+        results = self.collection.get(  # Use self.collection, not self.vector_store.collection
+            where={"document_id": document_id}
+        )
+        
+        chunk_count = len(results["ids"]) if results["ids"] else 0
+        
+        if chunk_count > 0:
+            # Delete all chunks from this document
+            self.collection.delete(  # Use self.collection
+                where={"document_id": document_id}
+            )
+            print(f"🗑️  Deleted {chunk_count} chunks from document {document_id}")
+        else:
+            print(f"⚠️  No chunks found for document {document_id}")
+        
+        return chunk_count

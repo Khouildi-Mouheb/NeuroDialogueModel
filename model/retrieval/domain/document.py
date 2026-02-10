@@ -21,9 +21,7 @@ class Document:
         self.__numberOfChunks = 0
     
     # ===== ID Methods =====
-    def setId(self, value: int):
-        if value < 0:
-            raise ValueError("ID cannot be negative")
+    def setId(self, value: str):
         self.__id = value
 
     def getId(self) -> int:

@@ -1,10 +1,10 @@
-from .textPreprocessor import TexrPreprocessor
+from .textPreprocessor import TextPreprocessor
 from model.retrieval.domain.document import Document
 
-class TextCleaner(TexrPreprocessor):
+class TextCleaner(TextPreprocessor):
 
     def preprocessText(self, document : Document = None) -> Document:
         #basic example 
-        cleaned_text = document.getcontent().strip().lower()
+        cleaned_text = document.getContent().strip().lower()
         document.setCleanedContent(cleaned_text)
         return document

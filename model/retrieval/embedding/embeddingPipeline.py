@@ -4,7 +4,7 @@ from model.retrieval.chunking.textChunk import TextChunk
 from model.retrieval.embedding.embeddingModel import EmbeddingModel
 from model.retrieval.indexing.documentIndexer import DocumentIndexer
 from model.retrieval.domain.document import Document
-
+from model.utils.idGenerator import IDGenerator
 
 class EmbeddingPipeline:
 
@@ -15,13 +15,15 @@ class EmbeddingPipeline:
         textPreprocessor: TextPreprocessor,
         textChunker: TextChunk,
         embeddingModel: EmbeddingModel,
-        indexer: DocumentIndexer = None 
+        indexer: DocumentIndexer = None ,
+        docIdGenerator=IDGenerator,
     ):
         self.documentLoader = loader
         self.textPreprocessor = textPreprocessor
         self.textChunker = textChunker
         self.embeddingModel = embeddingModel
         self.indexer = indexer
+        self.docIdGenerator=docIdGenerator
     
     def process(
         self,
@@ -37,7 +39,9 @@ class EmbeddingPipeline:
         print("1. Loading document...")
         document = self.documentLoader.loadDocument(document_source)
         print(f"   ✅ Loaded ({document.getLength()} characters)")
-        
+        self.docIdGenerator.generateDocumentId(document)
+        print(f'document ID = {document.getId()}')
+
         # Step 2: Preprocess
         print("2. Preprocessing...")
         document = self.textPreprocessor.preprocessText(document)

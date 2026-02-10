@@ -19,9 +19,8 @@ class PDFDocumentLoader(DocumentLoader):
                 full_text = '\n'.join(text_parts)
                 
                 document = Document(source=source)
-                document.setNumberofPages(len(reader.pages))
+                document.setNumberOfPages(len(reader.pages))
                 document.setContent(full_text)
-                document.setLength()
                 """
                 pdf_metadata = {
                     "file_type": "PDF",
