@@ -79,8 +79,14 @@ def startup_event():
 
     try:
         generator = CloudBasedGenerator()
+        logger.info("🚀 Starting generation services...")
+        print("🚀 Starting generation services...")
         emotion_agent = EmotionDetectionAgent()
+        logger.info("🚀 Starting emotion detection services...")
+        print("🚀 Starting emotion detection services...")
         intent_agent = IntentNeedsAgent()
+        logger.info("🚀 Starting intent & needs services...")
+        print("🚀 Starting intent & needs services...")
 
         verification_config = VerificationConfig(
             safety_threshold=0.8,
@@ -88,12 +94,16 @@ def startup_event():
             appropriateness_threshold=0.7,
             enable_fallback=True
         )
+        logger.info("🚀 Starting verifcation config...")
+        print("🚀 Starting verifcation config...")
 
         verificators = [
             SafetyVerificator(threshold=verification_config.safety_threshold),
             EmpathyVerificator(threshold=verification_config.empathy_threshold),
             AppropriatenessVerificator(threshold=verification_config.appropriateness_threshold),
         ]
+        logger.info("🚀 Starting verifcation services...")
+        print("🚀 Starting verifcation services...")
 
         verification_strategy = MLVerificationStrategy(
             score_weights=verification_config.score_weights,
