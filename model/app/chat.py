@@ -24,14 +24,18 @@ logger = logging.getLogger("neurodialogue-api")
 # Your project imports
 # -------------------------------------------------------------------
 from generation.agents.cloudBasedGenerator import CloudBasedGenerator
-from analysis.agents.emotionDetectionAgent import EmotionDetectionAgent
-from analysis.agents.intentAndNeedsAgent import IntentNeedsAgent
 
-from verification.agents.safetyVerificator import SafetyVerificator
-from verification.agents.empathyVerificator import EmpathyVerificator
-from verification.agents.appropriatenessVerificator import AppropriatenessVerificator
-from verification.strategies.mlVerificationStrategy import MLVerificationStrategy
-from verification.config.verificationConfig import VerificationConfig
+# ────────────────────────────────────────────────────────────────
+# COMMENTED OUT → analysis & verification agents (to save memory)
+# ────────────────────────────────────────────────────────────────
+# from analysis.agents.emotionDetectionAgent import EmotionDetectionAgent
+# from analysis.agents.intentAndNeedsAgent import IntentNeedsAgent
+#
+# from verification.agents.safetyVerificator import SafetyVerificator
+# from verification.agents.empathyVerificator import EmpathyVerificator
+# from verification.agents.appropriatenessVerificator import AppropriatenessVerificator
+# from verification.strategies.mlVerificationStrategy import MLVerificationStrategy
+# from verification.config.verificationConfig import VerificationConfig
 
 from app.chatService import ChatService
 
@@ -39,9 +43,9 @@ from app.chatService import ChatService
 # FastAPI app
 # -------------------------------------------------------------------
 app = FastAPI(
-    title="NeuroDialogue AI API",
-    description="Emotion-aware conversational AI service",
-    version="2.0.0"
+    title="NeuroDialogue AI API (Generator Only Mode)",
+    description="Minimal mode: only cloud-based generation (no emotion/intent/verification)",
+    version="2.0.0-minimal"
 )
 
 # -------------------------------------------------------------------
@@ -49,7 +53,7 @@ app = FastAPI(
 # -------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # ← Change to specific domains later (e.g. ["http://localhost:3000"])
+    allow_origins=["*"],           # ← Change to specific domains later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,7 +64,7 @@ app.add_middleware(
 # -------------------------------------------------------------------
 class ChatRequest(BaseModel):
     text: str
-    conversation_id: str | None = None      # optional – useful for multi-turn context later
+    conversation_id: str | None = None      # optional – for future multi-turn
 
 class ChatResponse(BaseModel):
     status: str
@@ -75,63 +79,48 @@ chat_service: ChatService | None = None
 @app.on_event("startup")
 def startup_event():
     global chat_service
-    logger.info("🚀 Starting NeuroDialogue services...")
+    logger.info("🚀 Starting NeuroDialogue services (minimal mode)...")
 
     try:
+        logger.info("Loading CloudBasedGenerator...")
         generator = CloudBasedGenerator()
-        logger.info("🚀 Starting generation services...")
-        print("🚀 Starting generation services...")
-        emotion_agent = EmotionDetectionAgent()
-        logger.info("🚀 Starting emotion detection services...")
-        print("🚀 Starting emotion detection services...")
-        intent_agent = IntentNeedsAgent()
-        logger.info("🚀 Starting intent & needs services...")
-        print("🚀 Starting intent & needs services...")
 
-        verification_config = VerificationConfig(
-            safety_threshold=0.8,
-            empathy_threshold=0.6,
-            appropriateness_threshold=0.7,
-            enable_fallback=True
-        )
-        logger.info("🚀 Starting verifcation config...")
-        print("🚀 Starting verifcation config...")
+        # ────────────────────────────────────────────────────────────────
+        # COMMENTED OUT → no analysis or verification agents
+        # ────────────────────────────────────────────────────────────────
+        # emotion_agent = EmotionDetectionAgent()
+        # intent_agent = IntentNeedsAgent()
+        #
+        # verification_config = VerificationConfig(...)
+        # verificators = [SafetyVerificator(...), ...]
+        # verification_strategy = MLVerificationStrategy(...)
 
-        verificators = [
-            SafetyVerificator(threshold=verification_config.safety_threshold),
-            EmpathyVerificator(threshold=verification_config.empathy_threshold),
-            AppropriatenessVerificator(threshold=verification_config.appropriateness_threshold),
-        ]
-        logger.info("🚀 Starting verifcation services...")
-        print("🚀 Starting verifcation services...")
-
-        verification_strategy = MLVerificationStrategy(
-            score_weights=verification_config.score_weights,
-            enable_fallback=verification_config.enable_fallback
-        )
-
+        # Pass only the generator to ChatService
+        # (you may need to temporarily adjust ChatService.__init__ to accept None or remove unused params)
         chat_service = ChatService(
             generator=generator,
-            emotion_agent=emotion_agent,
-            intent_agent=intent_agent,
-            verification_strategy=verification_strategy,
-            verificators=verificators
+            emotion_agent=None,           # ← temporary – adjust your ChatService code
+            intent_agent=None,            # ← temporary
+            verification_strategy=None,   # ← temporary
+            verificators=None             # ← temporary
         )
 
-        logger.info("✅ NeuroDialogue initialized successfully")
+        logger.info("✅ NeuroDialogue initialized successfully (generator only)")
+
     except Exception as e:
         logger.critical("Failed to initialize services", exc_info=True)
         raise RuntimeError("Startup failed") from e
 
 # -------------------------------------------------------------------
-# Health check
+# Health check (fast & always available)
 # -------------------------------------------------------------------
 @app.get("/health")
+@app.get("/healthz")
 def health_check():
-    return {"status": "healthy", "service": "neurodialogue-model"}
+    return {"status": "healthy", "mode": "generator-only", "service": "neurodialogue-model"}
 
 # -------------------------------------------------------------------
-# Main chat endpoint – POST /chat (recommended for chat APIs)
+# Main chat endpoint – POST /chat
 # -------------------------------------------------------------------
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
@@ -146,26 +135,33 @@ async def chat(request: ChatRequest):
     try:
         raw_result = chat_service.generate_response(request.text)
         
-        # Extract the actual string response – adjust key name if different
-        response_text = raw_result.get("response", "") if isinstance(raw_result, dict) else str(raw_result)
-        
+        # Extract string response
+        response_text = (
+            raw_result.get("response")
+            or raw_result.get("text")
+            or raw_result.get("message")
+            or str(raw_result)
+        ).strip()
+
         if not response_text:
             response_text = "No response generated"
 
         return ChatResponse(
             status="success",
-            data=response_text
+            data=response_text,
+            error=None
         )
     except Exception as e:
         logger.error("Generation failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
 # -------------------------------------------------------------------
 # Run locally (development)
 # -------------------------------------------------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
-        "chat:app",           
+        "main:app",           # ← change "main" to your actual filename if different
         host="0.0.0.0",
         port=port,
         reload=True,
