@@ -1,8 +1,3 @@
-"""
-Verification Result Domain Model
-
-Contains the result of verification process
-"""
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional

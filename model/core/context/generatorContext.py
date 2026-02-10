@@ -1,7 +1,7 @@
 from .context import Context
 from core.domain.userQuery import UserQuery
 from core.domain.chunk import Chunk
-from core.domain.userState import UserState
+from analysis.domain.userState import UserState
 from core.domain.rewrittenQuery import RewrittenQuery
 from typing import List
 

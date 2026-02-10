@@ -7,9 +7,8 @@ Combines multiple ML-based verificators
 from typing import List, Dict
 import logging
 
-from core.domain.userState import UserState
+from analysis.domain.userState import UserState
 from verification.domain.verificationResult import VerificationResult
-from verification.domain.verificationIssue import VerificationIssue
 from verification.domain.verificationStatus import VerificationStatus
 from verification.agents.verificatorAgent import VerificatorAgent
 from .verificationStrategy import VerificationStrategy

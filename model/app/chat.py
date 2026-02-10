@@ -1,114 +1,163 @@
 import sys
 import os
-from fastapi import FastAPI, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, HTMLResponse
 import logging
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import uvicorn
 
-# Configure logging
+# -------------------------------------------------------------------
+# Path fix (important for your project structure)
+# -------------------------------------------------------------------
+sys.path.insert(
+    0,
+    os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+)
+
+# -------------------------------------------------------------------
+# Logging
+# -------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("neurodialogue-api")
 
-# Fix paths
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from core.domain.userQuery import UserQuery
-from core.domain.userState import UserState
-from core.context.generatorContext import GeneratorContext
+# -------------------------------------------------------------------
+# Your project imports
+# -------------------------------------------------------------------
 from generation.agents.cloudBasedGenerator import CloudBasedGenerator
-#from infrastructure.agents.emotionDetectionAgent import EmotionDetectionAgent
-#from infrastructure.agents.intentAndNeedsAgent import IntentNeedsAgent
+from analysis.agents.emotionDetectionAgent import EmotionDetectionAgent
+from analysis.agents.intentAndNeedsAgent import IntentNeedsAgent
 
-# Create FastAPI app
+from verification.agents.safetyVerificator import SafetyVerificator
+from verification.agents.empathyVerificator import EmpathyVerificator
+from verification.agents.appropriatenessVerificator import AppropriatenessVerificator
+from verification.strategies.mlVerificationStrategy import MLVerificationStrategy
+from verification.config.verificationConfig import VerificationConfig
+
+from app.chatService import ChatService
+
+# -------------------------------------------------------------------
+# FastAPI app
+# -------------------------------------------------------------------
 app = FastAPI(
-    title="NeuroDialogue Model API",
-    description="API for emotion-aware chat",
+    title="NeuroDialogue AI API",
+    description="Emotion-aware conversational AI service",
     version="2.0.0"
 )
 
-# CORS - Allow your Django domain
+# -------------------------------------------------------------------
+# CORS – allow frontend (restrict origins in production!)
+# -------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],           # ← Change to specific domains later (e.g. ["http://localhost:3000"])
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize agents
-generator = CloudBasedGenerator()
-#emotionsDetector = EmotionDetectionAgent()
-#intentAndNeedsDetector = IntentNeedsAgent()
+# -------------------------------------------------------------------
+# Request / Response models
+# -------------------------------------------------------------------
+class ChatRequest(BaseModel):
+    text: str
+    conversation_id: str | None = None      # optional – useful for multi-turn context later
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "NeuroDialogue AI API",
-        "status": "online",
-        "version": "2.0.0"
-    }
+class ChatResponse(BaseModel):
+    status: str
+    data: str
+    error: str | None = None
 
+# -------------------------------------------------------------------
+# Global service (loaded once at startup)
+# -------------------------------------------------------------------
+chat_service: ChatService | None = None
+
+@app.on_event("startup")
+def startup_event():
+    global chat_service
+    logger.info("🚀 Starting NeuroDialogue services...")
+
+    try:
+        generator = CloudBasedGenerator()
+        emotion_agent = EmotionDetectionAgent()
+        intent_agent = IntentNeedsAgent()
+
+        verification_config = VerificationConfig(
+            safety_threshold=0.8,
+            empathy_threshold=0.6,
+            appropriateness_threshold=0.7,
+            enable_fallback=True
+        )
+
+        verificators = [
+            SafetyVerificator(threshold=verification_config.safety_threshold),
+            EmpathyVerificator(threshold=verification_config.empathy_threshold),
+            AppropriatenessVerificator(threshold=verification_config.appropriateness_threshold),
+        ]
+
+        verification_strategy = MLVerificationStrategy(
+            score_weights=verification_config.score_weights,
+            enable_fallback=verification_config.enable_fallback
+        )
+
+        chat_service = ChatService(
+            generator=generator,
+            emotion_agent=emotion_agent,
+            intent_agent=intent_agent,
+            verification_strategy=verification_strategy,
+            verificators=verificators
+        )
+
+        logger.info("✅ NeuroDialogue initialized successfully")
+    except Exception as e:
+        logger.critical("Failed to initialize services", exc_info=True)
+        raise RuntimeError("Startup failed") from e
+
+# -------------------------------------------------------------------
+# Health check
+# -------------------------------------------------------------------
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "neurodialogue-model"}
 
-@app.get("/chat_final")
-def chat_final(text: str = Query(..., min_length=1, max_length=2000)):
-    """Complete chat response with emotion detection"""
-    try:
-        logger.info(f"Received query: {text}")
-        
-        # Create user query
-        query = UserQuery(text=text)
-        
-        # Detect emotions
-        logger.info("Detecting emotions...")
-        #emotionsResult = emotionsDetector.detect_emotions(query, top_k=3)
-        emotionsResult = emotionsResult()
-        
-        # Analyze intent
-        logger.info("Analyzing intent...")
-        #intentAndNeedsResult = intentAndNeedsDetector.analyze(text)
-        intentAndNeedsResult=intentAndNeedsResult()
-        
-        # Create user state
-        #userState = UserState(emotions=emotionsResult)
-        userState = UserState()
-        # Create generator context
-        generatorContext = GeneratorContext(
-            user_query=query,
-            user_state=userState
-        )
-        
-        # Generate response
-        logger.info("Generating response...")
-        prompt = generatorContext.format_context_for_prompt()
-        full_response = ""
-        for token in generator.stream(prompt=prompt):
-            full_response += token
-        
-        logger.info("Response generated successfully")
-        
-        return {
-            "response": full_response,
-            "query": text,
-            "analysis": {
-                "emotions": emotionsResult.emotions,
-                "primary_emotion": emotionsResult.emotions[0] if emotionsResult.emotions else None,
-                "intent": intentAndNeedsResult.get("intent"),
-                "psychological_need": intentAndNeedsResult.get("psychological_need")
-            },
-            "status": "success"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in chat_final: {str(e)}", exc_info=True)
-        return {
-            "error": str(e),
-            "status": "failed"
-        }
+# -------------------------------------------------------------------
+# Main chat endpoint – POST /chat (recommended for chat APIs)
+# -------------------------------------------------------------------
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Message text cannot be empty")
 
+    if chat_service is None:
+        raise HTTPException(status_code=503, detail="AI service not initialized")
+
+    logger.info(f"💬 Incoming: {request.text!r} | conv: {request.conversation_id}")
+
+    try:
+        raw_result = chat_service.generate_response(request.text)
+        
+        # Extract the actual string response – adjust key name if different
+        response_text = raw_result.get("response", "") if isinstance(raw_result, dict) else str(raw_result)
+        
+        if not response_text:
+            response_text = "No response generated"
+
+        return ChatResponse(
+            status="success",
+            data=response_text
+        )
+    except Exception as e:
+        logger.error("Generation failed", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+# -------------------------------------------------------------------
+# Run locally (development)
+# -------------------------------------------------------------------
 if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 7860))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8000))  
+    uvicorn.run(
+        "chat:app",           
+        host="0.0.0.0",
+        port=port,
+        reload=True,
+        log_level="info"
+    )

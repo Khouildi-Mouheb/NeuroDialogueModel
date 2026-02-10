@@ -5,13 +5,12 @@ Checks if response appropriately matches user's emotional state
 """
 
 from typing import Optional
-import re
 
-from core.domain.userState import UserState
+from analysis.domain.userState import UserState
 from verification.domain.verificationResult import VerificationResult
 from verification.domain.verificationIssue import VerificationIssue
-from verification.domain.verificationStatus import VerificationStatus
 from .verificatorAgent import VerificatorAgent
+from verification.domain.verificationResultFactory import VerificationResultFactory
 
 
 class EmpathyVerificator(VerificatorAgent):

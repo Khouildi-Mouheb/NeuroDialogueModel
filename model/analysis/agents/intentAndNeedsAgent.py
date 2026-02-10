@@ -1,6 +1,6 @@
 from transformers import pipeline
 from typing import List
-from core.domain.intentAndNeedsResult import IntentAndNeedsResult
+from analysis.domain.intentAndNeedsResult import IntentAndNeedsResult
 
 class IntentNeedsAgent:
 

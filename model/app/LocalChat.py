@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.domain.userQuery import UserQuery
-from core.domain.userState import UserState
+from analysis.domain.userState import UserState
 from core.context.generatorContext import GeneratorContext
 from generation.agents.cloudBasedGenerator import CloudBasedGenerator
 from analysis.agents.emotionDetectionAgent import EmotionDetectionAgent
@@ -101,7 +101,8 @@ def test_all_functionality():
     )
     print(f"  User State created successfully")
     print(f"   - Emotions: {userState.emotions}")
-    print(f"   - Primary Intent: {userState.intentsAndNeeds}")
+    print(f"   - Intents : {userState.intents}")
+    print(f"   - Needs : {userState.needs}")
     
     # ============================================
     # STEP 4: GENERATE CONTEXT
@@ -144,6 +145,7 @@ def test_all_functionality():
         print(chunk, end="", flush=True)
     print("\n" + "─" * 40)
     print(f" Response length: {len(original_response)} characters")
+    print(f'the original response is : {original_response}')
     
     # ============================================
     # STEP 5B: CHAT WITH VERIFICATION
@@ -255,7 +257,7 @@ def test_all_functionality():
             user_state=userState
         )
         print(f"   Status: {result.status.value}")
-        print(f"   Score: {result.score:.2f}")
+        print(f"   Score: {result.scores}")
         print(f"   Threshold: {verificator.threshold}")
         if result.issues:
             print(f"   Issues: {[issue.value for issue in result.issues]}")
@@ -276,5 +278,5 @@ if __name__ == "__main__":
         if again == 'y':
             test_all_functionality()
         else:
-            print("\n👋 Thank you for testing! Goodbye!")
+            print("\n Thank you for testing! Goodbye!")
             break

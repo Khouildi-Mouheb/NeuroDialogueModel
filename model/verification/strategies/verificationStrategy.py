@@ -7,10 +7,8 @@ Abstract base for verification strategies
 from abc import ABC, abstractmethod
 from typing import List
 
-from core.domain.userState import UserState
+from analysis.domain.userState import UserState
 from verification.domain.verificationResult import VerificationResult
-from verification.domain.verificationIssue import VerificationIssue
-from verification.domain.verificationStatus import VerificationStatus
 from verification.agents.verificatorAgent import VerificatorAgent
 
 
