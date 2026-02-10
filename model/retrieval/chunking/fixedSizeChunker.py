@@ -1,6 +1,6 @@
 from .textChunk import TextChunk
 from model.retrieval.domain.chunk import Chunk
-from typing import List, Dict, Any
+from typing import Dict, Any
 from model.retrieval.domain.document import Document
 
 
