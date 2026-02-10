@@ -12,6 +12,8 @@ app/LocalChat.py
 
 .env
 
+model/my_saved_models/*
+
 
 __pycache__/
 *.py[cod]

@@ -1,6 +1,6 @@
 import os
 import chromadb
-from typing import List, Any
+from typing import Any
 from .vectorStore import VectorStore
 
 
