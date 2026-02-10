@@ -1,5 +1,5 @@
-from core.domain.chunk import Chunk
-from core.domain.document import Document
+from model.retrieval.domain.chunk import Chunk
+from model.retrieval.domain.document import Document
 from infrastructure.chunking.fixedSizeChunker import FixedSizeChunker
 from infrastructure.chunking.textChunk import TextChunk
 from infrastructure.embedding.embeddingModel import EmbeddingModel

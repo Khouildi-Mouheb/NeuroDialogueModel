@@ -1,6 +1,6 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from core.domain.document import Document
+from model.retrieval.domain.document import Document
 
 class EmbeddingModel: 
 

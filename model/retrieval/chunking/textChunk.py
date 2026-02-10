@@ -1,6 +1,6 @@
 from abc import ABC , abstractmethod
-from core.domain.document import Document
-from core.domain.chunk import Chunk
+from model.retrieval.domain.document import Document
+from model.retrieval.domain.chunk import Chunk
 
 
 class TextChunk(ABC):

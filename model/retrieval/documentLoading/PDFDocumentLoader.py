@@ -1,5 +1,5 @@
 from .documentLoader import DocumentLoader
-from core.domain.document import Document
+from model.retrieval.domain.document import Document
 import PyPDF2 
 
 

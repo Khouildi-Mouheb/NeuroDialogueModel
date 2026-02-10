@@ -1,7 +1,7 @@
 from .textChunk import TextChunk
-from core.domain.chunk import Chunk
+from model.retrieval.domain.chunk import Chunk
 from typing import List, Dict, Any
-from core.domain.document import Document
+from model.retrieval.domain.document import Document
 
 
 #first and child class od textChunker (basic axample od chunking strategy)

@@ -1,6 +1,6 @@
 from .context import Context
 from core.domain.userQuery import UserQuery
-from core.domain.chunk import Chunk
+from model.retrieval.domain.chunk import Chunk
 from analysis.domain.userState import UserState
 from core.domain.rewrittenQuery import RewrittenQuery
 from typing import List
