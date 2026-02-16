@@ -130,11 +130,13 @@ async def chat(request: ChatRequest):
         logger.error("Generation failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
+# main.py
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
         "chat:app",
-        host="0.0.0.0",
+        host="0.0.0.0",  # ← Make sure this is 0.0.0.0, not localhost
         port=port,
         reload=True,
         log_level="info"

@@ -19,6 +19,7 @@ class ChatService:
         self.verificators = verificators
 
     def generate_response(self, text: str):
+        print('view hit')
         # 1. User query
         user_query = UserQuery(text=text)
 
