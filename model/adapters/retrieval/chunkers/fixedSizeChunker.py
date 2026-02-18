@@ -1,8 +1,8 @@
 
 from .textChunk import TextChunk
-from model.retrieval.domain.chunk import Chunk
+from model.domain.entities.knowledge.chunk import Chunk
 from typing import Dict, Any
-from model.retrieval.domain.document import Document
+from model.domain.entities.knowledge.document import Document
 
 
 #first and child class od textChunker (basic axample od chunking strategy)

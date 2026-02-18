@@ -1,8 +1,8 @@
 
 # retrieval/agents/queryRetriever.py
 
-from model.retrieval.stores.vectorStore import VectorStore
-from model.retrieval.embedding.embeddingModel import EmbeddingModel
+from model.ports.vectorStore import VectorStore
+from model.adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 from typing import List, Dict, Any
 
 

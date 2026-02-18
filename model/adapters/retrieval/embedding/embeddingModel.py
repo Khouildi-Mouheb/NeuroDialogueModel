@@ -2,7 +2,7 @@
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from model.retrieval.domain.document import Document
+from model.domain.entities.knowledge.document import Document
 from typing import List
 
 
