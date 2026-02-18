@@ -1,0 +1,119 @@
+@startuml
+' Class diagram for ChatOrchestrator and related components
+skinparam classAttributeIconSize 0
+
+' Interfaces / base types
+interface IGenerator
+interface IVerificationStrategy
+interface IVerificator
+interface IAgent
+
+' Core domain objects
+class UserQuery {
+  +text: str
+}
+
+class UserState {
+  +emotions
+  +intentsAndNeeds
+}
+
+class GeneratorContext {
+  +user_query: UserQuery
+  +user_state: UserState
+  +format_context_for_prompt(): str
+}
+
+' Configuration dataclasses
+class OrchestratorConfig << (D,orch) >> {
+  +enable_emotion: bool
+  +enable_intent: bool
+  +free_mode: bool
+  +max_retries: int
+  +disabled_tools: List[str]
+}
+
+class AnalysisConfig << (D,analysis) >>
+class GenerationConfig << (D,generation) >>
+class RetrievalConfig << (D,retrieval) >>
+class AppConfig << (D,app) >>
+
+' Concrete agents and strategies
+class CloudBasedGenerator {
+  +stream(prompt: str) : Iterable[str]
+}
+
+class EmotionDetectionAgent {
+  +detect_emotions(text: str)
+}
+
+class IntentNeedsAgent {
+  +analyze(text: str)
+}
+
+class MLVerificationStrategy {
+  +execute(verificators, response, query, user_state)
+}
+
+class SafetyVerificator {
+  +threshold: float
+}
+
+class EmpathyVerificator {
+  +threshold: float
+}
+
+class AppropriatenessVerificator {
+  +threshold: float
+}
+
+' Orchestrator
+class ChatOrchestrator {
+  -generator: IGenerator
+  -emotion_agent: IAgent
+  -intent_agent: IAgent
+  -verification_strategy: IVerificationStrategy
+  -verificators: List[IVerificator]
+  -config: OrchestratorConfig
+  +orchestrate(text: str) : dict
+  +_analyze(text)
+  +_generate(context)
+  +_verify(response, text, user_state)
+  +_handle_retry(...)
+  +_build_context(...)
+  +_should_run_emotion(...)
+  +_should_run_intent(...)
+}
+
+' Relationships
+ChatOrchestrator --> OrchestratorConfig : uses
+ChatOrchestrator --> IGenerator : uses
+ChatOrchestrator --> EmotionDetectionAgent : uses
+ChatOrchestrator --> IntentNeedsAgent : uses
+ChatOrchestrator --> IVerificationStrategy : uses
+ChatOrchestrator "*" --> IVerificator : holds
+
+IGenerator <|.. CloudBasedGenerator
+IAgent <|.. EmotionDetectionAgent
+IAgent <|.. IntentNeedsAgent
+IVerificationStrategy <|.. MLVerificationStrategy
+IVerificator <|.. SafetyVerificator
+IVerificator <|.. EmpathyVerificator
+IVerificator <|.. AppropriatenessVerificator
+
+CloudBasedGenerator ..> GeneratorContext : consumes
+EmotionDetectionAgent ..> UserQuery : analyzes
+IntentNeedsAgent ..> UserQuery : analyzes
+MLVerificationStrategy ..> SafetyVerificator : uses
+MLVerificationStrategy ..> EmpathyVerificator : uses
+MLVerificationStrategy ..> AppropriatenessVerificator : uses
+
+UserState --> UserQuery
+GeneratorContext --> UserState
+
+note left of ChatOrchestrator
+  - follows SOLID and single-responsibility
+  - extensible: add agents, verificators, strategies
+end note
+
+@enduml

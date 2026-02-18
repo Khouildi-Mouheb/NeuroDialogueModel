@@ -12,7 +12,7 @@ app/LocalChat.py
 
 .env
 
-model/my_saved_models/*
+my_saved_models/*
 
 
 __pycache__/
