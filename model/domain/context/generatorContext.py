@@ -1,9 +1,9 @@
 
 from .context import Context
-from core.domain.userQuery import UserQuery
-from retrieval.domain.chunk import Chunk
-from analysis.domain.userState import UserState
-from core.domain.rewrittenQuery import RewrittenQuery
+from domain.entities.query.userQuery import UserQuery
+from domain.entities.knowledge.chunk import Chunk
+from domain.services.userState import UserState
+from domain.entities.query.rewrittenQuery import RewrittenQuery
 from typing import List
 
 class GeneratorContext(Context):
