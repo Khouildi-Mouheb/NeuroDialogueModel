@@ -2,11 +2,12 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import Optional
 
-from analysis.domain.userState import UserState
-from verification.domain.verificationResult import VerificationResult
-from verification.domain.verificationIssue import VerificationIssue
+from typing import Optional
+
+from domain.services.userState import UserState
+from domain.valueObjects.verificationResult import VerificationResult
 from .verificatorAgent import VerificatorAgent
-from verification.domain.verificationResultFactory import VerificationResultFactory
+
 
 class SafetyVerificator(VerificatorAgent):
     """

@@ -8,10 +8,9 @@ Checks if response tone and content are appropriate for context
 from typing import Optional
 
 from domain.services.userState import UserState
-from  import VerificationResult
-from verification.domain.verificationIssue import VerificationIssue
+from domain.valueObjects.verificationResult import VerificationResult
 from .verificatorAgent import VerificatorAgent
-from verification.domain.verificationResultFactory import VerificationResultFactory
+
 
 
 class AppropriatenessVerificator(VerificatorAgent):

@@ -6,8 +6,12 @@ Abstract base class for all verificators
 
 from abc import ABC, abstractmethod
 
-from analysis.domain.userState import UserState
-from verification.domain.verificationResult import VerificationResult
+from typing import Optional
+
+from domain.services.userState import UserState
+from domain.valueObjects.verificationResult import VerificationResult
+from .verificatorAgent import VerificatorAgent
+
 
 
 
