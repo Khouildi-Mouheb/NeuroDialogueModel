@@ -1,5 +1,5 @@
-from analysis.domain.emotionResult import EmotionResult
-from analysis.domain.intentAndNeedsResult import IntentAndNeedsResult
+from domain.valueObjects.emotionResult import EmotionResult
+from domain.valueObjects.intentAndNeedsResult import IntentAndNeedsResult
 from typing import Optional
 
 class UserState: 

@@ -1,23 +1,24 @@
 from typing import Optional, List, Any, Dict
 
+from domain.valueObjects.aggregatedVerificationResult import AggregatedVerificationResult
+from domain.valueObjects.empathyVerificationResult import EmpathyVerificationResult
+from domain.valueObjects.appropriatenessVerificationResult import AppropriatenessVerificationResult
+from domain.valueObjects.safetyVerificationResult import SafetyVerificationResult
+from domain.enums.verificationStatus import VerificationStatus
+
 
 class ChatOrchestrator:
     """Dependency-injected orchestrator for the full chat workflow.
 
-    This class intentionally avoids importing project modules at top-level
-    (some project modules have fragile imports). Instead it accepts
-    ready-to-use component instances (duck-typed):
+    Accepts ready-to-use component instances (duck-typed):
 
-    - embedding_model: has `embedText(text)` or `embedtext(text)`
-    - retriever: has `retrieve(query, top_k)` returning list of results
-    - generator: has `stream(prompt)` (yields) or `generate(prompt)` (returns str)
-    - analysis_agents: list of agents (emotion, intent) with methods like
-      `detect_emotions(text)` and `analyze(text)`
-    - verifiers: list of verifier agents with `verify(reply, user_state)`
-    - indexer: optional document indexer
-
-    All calls are defensive (check for attribute existence) so this
-    orchestrator can be used even when some components are missing.
+    - embedding_model : has `embedText(text)`
+    - retriever       : has `retrieve(query, top_k)`
+    - generator       : has `stream(prompt)` (yields) or `generate(prompt)` → str
+    - analysis_agents : list — emotion agent (`detect_emotions`) + intent agent (`analyze`)
+    - verifiers       : exactly three verifier agents in order:
+                          [EmpathyVerificator, AppropriatenessVerificator, SafetyVerificator]
+    - indexer         : optional document indexer
     """
 
     def __init__(
@@ -36,24 +37,24 @@ class ChatOrchestrator:
         self.verifiers = verifiers or []
         self.indexer = indexer
 
+    # ------------------------------------------------------------------
+    # Internal steps
+    # ------------------------------------------------------------------
+
     def _runAnalysis(self, text: str) -> Dict[str, Any]:
         user_state: Dict[str, Any] = {}
 
         for agent in self.analysis_agents:
-            # Emotion agent
             if hasattr(agent, "detect_emotions"):
                 try:
-                    emotions = agent.detect_emotions(text)
-                    user_state["emotions"] = emotions
+                    user_state["emotions"] = agent.detect_emotions(text)
                 except Exception:
                     user_state.setdefault("emotions", None)
 
-            # Intent / needs agent
             if hasattr(agent, "analyze"):
                 try:
                     intent_result = agent.analyze(text)
                     user_state["intentsAndNeeds"] = intent_result
-                    # keep convenience fields if present
                     if hasattr(intent_result, "result"):
                         user_state["intents"] = intent_result.result.get("intents")
                         user_state["needs"] = intent_result.result.get("needs")
@@ -62,11 +63,9 @@ class ChatOrchestrator:
 
         return user_state
 
-    def _embedQuery(self, query: str):
+    def _embedQuery(self, query: str) -> Any:
         if not self.embedding_model:
             return None
-
-        # prefer camelCase `embedText`, fallback to `embedtext`
         if hasattr(self.embedding_model, "embedText"):
             return self.embedding_model.embedText(query)
         if hasattr(self.embedding_model, "embedtext"):
@@ -75,15 +74,15 @@ class ChatOrchestrator:
             return self.embedding_model.embedBatch([query])[0]
         return None
 
-    def _retrieve(self, query: str, query_vector: Any = None, top_k: int = 5) -> List[Dict[str, Any]]:
-        # Prefer a retriever interface
+    def _retrieve(
+        self, query: str, query_vector: Any = None, top_k: int = 5
+    ) -> List[Dict[str, Any]]:
         if self.retriever and hasattr(self.retriever, "retrieve"):
             try:
                 return self.retriever.retrieve(query, top_k=top_k)
             except Exception:
                 pass
 
-        # If retriever missing but a vector store-like object provided
         if self.retriever and hasattr(self.retriever, "query_vectors") and query_vector is not None:
             try:
                 return self.retriever.query_vectors(query_vector=query_vector, top_k=top_k)
@@ -92,7 +91,9 @@ class ChatOrchestrator:
 
         return []
 
-    def _formatPrompt(self, query: str, retrieved: List[Dict[str, Any]], user_state: Dict[str, Any]) -> str:
+    def _formatPrompt(
+        self, query: str, retrieved: List[Dict[str, Any]], user_state: Dict[str, Any]
+    ) -> str:
         parts = ["Answer concisely using retrieved documents when relevant."]
         parts.append(f"User Query: {query}")
 
@@ -102,7 +103,12 @@ class ChatOrchestrator:
         if retrieved:
             parts.append("Retrieved Information:")
             for i, r in enumerate(retrieved, 1):
-                text = r.get("text") or r.get("metadata", {}).get("text") or r.get("chunk_text") or ""
+                text = (
+                    r.get("text")
+                    or r.get("metadata", {}).get("text")
+                    or r.get("chunk_text")
+                    or ""
+                )
                 parts.append(f"Chunk {i}: {text}")
 
         return "\n\n".join(parts)
@@ -111,15 +117,10 @@ class ChatOrchestrator:
         if not self.generator:
             return "[NO GENERATOR CONFIGURED]"
 
-        # If generator supports streaming
         if hasattr(self.generator, "stream"):
             try:
-                pieces = []
-                for chunk in self.generator.stream(prompt):
-                    pieces.append(chunk)
-                return "".join(pieces)
+                return "".join(chunk for chunk in self.generator.stream(prompt))
             except Exception:
-                # fallback to sync generate if available
                 pass
 
         if hasattr(self.generator, "generate"):
@@ -128,55 +129,122 @@ class ChatOrchestrator:
             except Exception:
                 return "[GENERATION ERROR]"
 
-        # Last resort: call __call__
         try:
             return str(self.generator(prompt))
         except Exception:
             return "[GENERATOR NOT CALLABLE]"
 
-    def _verifyReply(self, reply: str, user_state: Dict[str, Any]) -> str:
-        # Run verifiers sequentially; they may return modified reply or raise
-        for verifier in self.verifiers:
-            try:
-                if hasattr(verifier, "verify"):
-                    result = verifier.verify(reply, user_state)
-                    if isinstance(result, str):
-                        reply = result
-                elif hasattr(verifier, "assess"):
-                    res = verifier.assess(reply, user_state)
-                    if isinstance(res, dict) and res.get("modified"):
-                        reply = res.get("reply", reply)
-            except Exception:
-                continue
-        return reply
+    def _verifyReply(
+        self, reply: str, user_state: Dict[str, Any]
+    ) -> tuple[str, AggregatedVerificationResult | None]:
+        """Run the three typed verifiers and return (final_reply, aggregated_result).
 
-    def handleUserMessage(self, user_message: str, user_id: Optional[str] = None, top_k: int = 5) -> str:
-        """Run the end-to-end flow and return assistant reply.
+        Verification flow
+        -----------------
+        1. Run each verifier in order: Empathy → Appropriateness → Safety.
+        2. Wrap the three typed results in AggregatedVerificationResult.
+        3. If overall status is REJECTED → return the fallback response immediately.
+        4. If overall status is NEEDS_REVISION → return the original reply anyway
+           (the orchestrator logs recommendations but does not block the response;
+           callers that want to act on them can inspect the returned result).
+        5. If APPROVED → return reply unchanged.
 
-        Steps:
-        1. Run analysis agents to build a lightweight user state
-        2. Embed query (if embedding model available)
-        3. Retrieve candidate chunks
-        4. Build a prompt from query, retrieved results and user state
-        5. Generate reply (stream or sync)
-        6. Run verifiers and return final reply
+        Returns a tuple so callers can optionally inspect the full aggregated result.
         """
-        # 1. Analysis
-        user_state = self._runAnalysis(user_message)
+        if len(self.verifiers) < 3:
+            # Not enough verifiers configured — skip verification entirely
+            return reply, None
 
-        # 2. Embed
+        empathy_verificator, appropriateness_verificator, safety_verificator = (
+            self.verifiers[0],
+            self.verifiers[1],
+            self.verifiers[2],
+        )
+
+        # --- Run each verifier ---
+        empathy_result: EmpathyVerificationResult = empathy_verificator.verify(
+            reply, user_state=user_state
+        )
+        appropriateness_result: AppropriatenessVerificationResult = (
+            appropriateness_verificator.verify(reply, user_state=user_state)
+        )
+        safety_result: SafetyVerificationResult = safety_verificator.verify(
+            reply, user_state=user_state
+        )
+
+        # --- Aggregate ---
+        aggregated = AggregatedVerificationResult(
+            empathy=empathy_result,
+            appropriateness=appropriateness_result,
+            safety=safety_result,
+        )
+
+        # --- Act on overall verdict ---
+        if aggregated.status == VerificationStatus.REJECTED:
+            # Safety hard-blocked the reply — use the fallback
+            final_reply = aggregated.fallback_response or (
+                "I'm sorry, I need to rephrase that. Could you give me a moment?"
+            )
+            return final_reply, aggregated
+
+        if aggregated.status == VerificationStatus.NEEDS_REVISION:
+            # Soft issues — pass the reply through but surface recommendations
+            # so the caller / logging layer can act on them
+            return reply, aggregated
+
+        # APPROVED — all good
+        return reply, aggregated
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def handleUserMessage(
+        self,
+        user_message: str,
+        user_id: Optional[str] = None,
+        top_k: int = 5,
+    ) -> str:
+        """Run the end-to-end flow and return the assistant reply.
+
+        Steps
+        -----
+        1. Analyse   — build user state (emotions, intents, needs)
+        2. Embed     — vectorise the query
+        3. Retrieve  — fetch relevant chunks
+        4. Prompt    — assemble prompt from query + context + user state
+        5. Generate  — produce a reply (streaming or sync)
+        6. Verify    — run Empathy / Appropriateness / Safety verificators
+        """
+        user_state  = self._runAnalysis(user_message)
         query_vector = self._embedQuery(user_message)
+        retrieved   = self._retrieve(user_message, query_vector=query_vector, top_k=top_k)
+        prompt      = self._formatPrompt(user_message, retrieved, user_state)
+        reply       = self._generateReply(prompt)
 
-        # 3. Retrieve
-        retrieved = self._retrieve(user_message, query_vector=query_vector, top_k=top_k)
-
-        # 4. Prompt
-        prompt = self._formatPrompt(user_message, retrieved, user_state)
-
-        # 5. Generate
-        reply = self._generateReply(prompt)
-
-        # 6. Verify
-        final_reply = self._verifyReply(reply, user_state)
+        final_reply, aggregated = self._verifyReply(reply, user_state)
 
         return final_reply
+
+    def handleUserMessageWithVerification(
+        self,
+        user_message: str,
+        user_id: Optional[str] = None,
+        top_k: int = 5,
+    ) -> tuple[str, AggregatedVerificationResult | None]:
+        """Same as handleUserMessage but also returns the full AggregatedVerificationResult.
+
+        Useful for callers that want to log issues, surface recommendations to
+        a developer dashboard, or trigger a retry loop on NEEDS_REVISION.
+        """
+        user_state   = self._runAnalysis(user_message)
+        query_vector = self._embedQuery(user_message)
+        retrieved    = self._retrieve(user_message, query_vector=query_vector, top_k=top_k)
+        prompt       = self._formatPrompt(user_message, retrieved, user_state)
+        reply        = self._generateReply(prompt)
+
+        final_reply, aggregated = self._verifyReply(reply, user_state)
+
+        return final_reply, aggregated
+
+
