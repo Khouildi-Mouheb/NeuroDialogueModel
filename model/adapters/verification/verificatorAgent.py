@@ -1,47 +1,33 @@
-"""
-Base Verificator Agent
-
-Abstract base class for all verificators
-"""
-
-from abc import ABC, abstractmethod
-
+from abc import abstractmethod
+from typing import Optional
+from domain.entities.agent import Agent
 from domain.services.userState import UserState
 from domain.valueObjects.verificationResult import VerificationResult
+from ports.verificationPort import VerificationPort
 
 
-
-
-
-class VerificatorAgent(ABC):
+class VerificatorAgent(Agent, VerificationPort):
     """
-    Base interface for all verificators
-    
-    All verificators must implement the verify method
+    Abstract base class for all verificators.
+
+    Inherits:
+        Agent           — shared domain base (logging, identity, etc.)
+        VerificationPort — enforces the verify() contract
+
+    All verificators must implement the verify() method.
     """
-    
+
     def __init__(self, name: str = None):
         self.name = name or self.__class__.__name__
-    
+
     @abstractmethod
     def verify(
         self,
         response: str,
-        query: str = None,
-        user_state: UserState = None
+        query: Optional[str] = None,
+        user_state: Optional[UserState] = None,
     ) -> VerificationResult:
-        """
-        Verify a generated response
-        
-        Args:
-            response: The generated response to verify
-            query: Optional user query for context
-            user_state: Optional user state for context
-            
-        Returns:
-            VerificationResult with verification outcome
-        """
-        pass
-    
+        ...
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"

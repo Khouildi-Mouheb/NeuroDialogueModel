@@ -1,21 +1,13 @@
-"""
-Appropriateness Verificator
-
-Checks if response tone and content are appropriate for context
-"""
-
 from typing import Optional
-
 from domain.services.userState import UserState
 from domain.valueObjects.appropriatenessVerificationResult import AppropriatenessVerificationResult
 from domain.enums.verificationIssue import VerificationIssue
-from .verificatorAgent import VerificatorAgent
+from adapters.verification.verificatorAgent import VerificatorAgent
 
 
 class AppropriatenessVerificator(VerificatorAgent):
     """
     Verificator for response appropriateness.
-
     Checks if tone, length, and content match the context.
     """
 
@@ -26,8 +18,8 @@ class AppropriatenessVerificator(VerificatorAgent):
     def verify(
         self,
         response: str,
-        query: str = None,
-        user_state: UserState = None,
+        query: Optional[str] = None,
+        user_state: Optional[UserState] = None,
     ) -> AppropriatenessVerificationResult:
         appropriateness_score = self._check_appropriateness(response, query, user_state)
         scores = {"appropriateness": appropriateness_score}

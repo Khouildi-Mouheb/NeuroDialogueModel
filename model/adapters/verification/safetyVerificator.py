@@ -1,25 +1,15 @@
-"""
-Safety Verificator
-
-Checks if response contains harmful content using toxic-bert
-"""
-
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from typing import Optional
-
-from typing import Optional
-
 from domain.services.userState import UserState
 from domain.valueObjects.safetyVerificationResult import SafetyVerificationResult
 from domain.enums.verificationIssue import VerificationIssue
-from .verificatorAgent import VerificatorAgent
+from adapters.verification.verificatorAgent import VerificatorAgent
 
 
 class SafetyVerificator(VerificatorAgent):
     """
     Verificator for safety concerns.
-
     Uses toxic-bert model to detect harmful content.
     """
 
@@ -35,8 +25,8 @@ class SafetyVerificator(VerificatorAgent):
     def verify(
         self,
         response: str,
-        query: str = None,
-        user_state: UserState = None,
+        query: Optional[str] = None,
+        user_state: Optional[UserState] = None,
     ) -> SafetyVerificationResult:
         safety_score = self._check_safety(response)
         scores = {"safety": safety_score}

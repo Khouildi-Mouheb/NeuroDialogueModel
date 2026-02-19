@@ -1,10 +1,7 @@
-from __future__ import annotations
-from dataclasses import dataclass
 from typing import Dict, List, Optional
-from .verificationResult import VerificationResult
-from domain.enums.verificationIssue import VerificationIssue
 from domain.enums.verificationStatus import VerificationStatus
-
+from domain.enums.verificationIssue import VerificationIssue
+from .verificationResult import VerificationResult
 
 
 class SafetyVerificationResult(VerificationResult):
@@ -13,6 +10,7 @@ class SafetyVerificationResult(VerificationResult):
 
     Relevant score key: ``'safety'``  (float 0-1, higher = safer)
     Possible issues:    SAFETY_CONCERN
+    Only verificator that can produce REJECTED status.
     """
 
     @property
@@ -20,7 +18,7 @@ class SafetyVerificationResult(VerificationResult):
         return self.scores.get("safety", 0.0)
 
     @classmethod
-    def approved(                                   # type: ignore[override]
+    def approved(
         cls,
         scores: Dict[str, float],
         confidence: float,
@@ -34,13 +32,13 @@ class SafetyVerificationResult(VerificationResult):
         )
 
     @classmethod
-    def rejected(                                   # type: ignore[override]
+    def rejected(
         cls,
         scores: Dict[str, float],
         issues: List[VerificationIssue],
+        fallback_response: Optional[str],
         recommendations: List[str],
         confidence: float,
-        fallback_response: Optional[str] = None,
         metadata: Optional[Dict] = None,
     ) -> "SafetyVerificationResult":
         return cls(
@@ -52,5 +50,3 @@ class SafetyVerificationResult(VerificationResult):
             fallback_response=fallback_response,
             metadata=metadata or {},
         )
-
-

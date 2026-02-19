@@ -1,21 +1,13 @@
-"""
-Empathy Verificator
-
-Checks if response appropriately matches user's emotional state
-"""
-
 from typing import Optional
-
 from domain.services.userState import UserState
 from domain.valueObjects.empathyVerificationResult import EmpathyVerificationResult
 from domain.enums.verificationIssue import VerificationIssue
-from .verificatorAgent import VerificatorAgent
+from adapters.verification.verificatorAgent import VerificatorAgent
 
 
 class EmpathyVerificator(VerificatorAgent):
     """
     Verificator for empathy alignment with user's emotional state.
-
     Checks if response tone matches user's emotions.
     """
 
@@ -36,8 +28,8 @@ class EmpathyVerificator(VerificatorAgent):
     def verify(
         self,
         response: str,
-        query: str = None,
-        user_state: UserState = None,
+        query: Optional[str] = None,
+        user_state: Optional[UserState] = None,
     ) -> EmpathyVerificationResult:
         empathy_score = self._check_empathy(response, user_state)
         scores = {"empathy": empathy_score}
@@ -53,7 +45,7 @@ class EmpathyVerificator(VerificatorAgent):
         recommendations = [
             f"Response empathy score is low ({empathy_score:.2f})",
             f"User is experiencing: "
-            f"{user_state.emotions.primary_emotion if user_state else 'unknown'}",
+            f"{user_state.emotions.primary_emotion if user_state and user_state.emotions else 'unknown'}",
         ]
 
         if self._has_dismissive_language(response):
@@ -93,5 +85,4 @@ class EmpathyVerificator(VerificatorAgent):
         return max(0.0, min(1.0, score))
 
     def _has_dismissive_language(self, response: str) -> bool:
-        response_lower = response.lower()
-        return any(phrase in response_lower for phrase in self.dismissive_phrases)
+        return any(phrase in response.lower() for phrase in self.dismissive_phrases)

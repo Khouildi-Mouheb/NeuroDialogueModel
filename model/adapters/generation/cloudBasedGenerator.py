@@ -1,47 +1,66 @@
 import os
-import sys
+from typing import Iterator
 from groq import Groq
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
+from domain.context.generatorContext import GeneratorContext
+from adapters.generation.generatorAgent import GeneratorAgent
 
-load_dotenv()  
+load_dotenv()
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-
-from .generatorAgent import GeneratorAgent
 
 class CloudBasedGenerator(GeneratorAgent):
+
     def __init__(self, model_name: str = "llama-3.3-70b-versatile"):
         self.model_name = model_name
         api_key = os.getenv("GROQ_API_KEY")
-        
+
         if not api_key:
             raise ValueError("GROQ_API_KEY environment variable not set!")
-        
+
         self.client = Groq(api_key=api_key)
 
-    def stream(self, prompt: str):
-        print('start streaming ! ')
+    # ------------------------------------------------------------------ #
+    # GenerationPort implementation                                        #
+    # ------------------------------------------------------------------ #
 
+    def stream(self, context: GeneratorContext) -> Iterator[str]:
+        print("start streaming!")
+        prompt = context.format_context_for_prompt()
 
         try:
             completion = self.client.chat.completions.create(
                 model=self.model_name,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+                messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=300,
-                stream=True
+                stream=True,
             )
 
             for chunk in completion:
-                if chunk.choices[0].delta.content:
-                    print(chunk.choices[0].delta.content)
-                    yield chunk.choices[0].delta.content
+                token = chunk.choices[0].delta.content
+                if token:
+                    print(token)
+                    yield token
 
         except Exception as e:
-            print(f"Error in GeneratorAgent: {str(e)}")
+            print(f"Error in CloudBasedGenerator: {str(e)}")
             yield f"[ERROR] {str(e)}"
+
+    def generateFullResponse(self, context: GeneratorContext) -> str:
+        """Generate a complete response in one shot (no streaming)."""
+        print("start generating full response!")
+        prompt = context.format_context_for_prompt()
+
+        try:
+            completion = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=300,
+                stream=False,
+            )
+            return completion.choices[0].message.content
+
+        except Exception as e:
+            print(f"Error in CloudBasedGenerator: {str(e)}")
+            return f"[ERROR] {str(e)}"
