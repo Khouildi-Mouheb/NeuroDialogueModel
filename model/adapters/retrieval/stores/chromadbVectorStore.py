@@ -1,10 +1,10 @@
 import os
 import chromadb
 from typing import Any
-from model.ports.vectorStorePort import VectorStore
+from model.ports.vectorStorePort import VectorStorePort
 
 
-class ChromaDBVectorStore(VectorStore):
+class ChromaDBVectorStore(VectorStorePort):
     def __init__(
         self,
         collection_name: str = "documents",

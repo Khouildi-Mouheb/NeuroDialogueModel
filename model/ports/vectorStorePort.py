@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 
-class VectorStore(ABC):
+class VectorStorePort(ABC):
     """Port (interface) for any vector store adapter.
 
     Any concrete vector store must inherit from this class and implement
