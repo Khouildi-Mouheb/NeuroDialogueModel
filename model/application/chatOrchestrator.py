@@ -37,9 +37,7 @@ class ChatOrchestrator:
         self.verifiers = verifiers or []
         self.indexer = indexer
 
-    # ------------------------------------------------------------------
-    # Internal steps
-    # ------------------------------------------------------------------
+
 
     def _runAnalysis(self, text: str) -> Dict[str, Any]:
         user_state: Dict[str, Any] = {}

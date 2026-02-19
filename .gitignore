@@ -6,6 +6,12 @@ __pycache__/
 *.pyo
 *.pyd
 
+model/.pytest_cache/*
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
 tests/
 
 app/LocalChat.py
