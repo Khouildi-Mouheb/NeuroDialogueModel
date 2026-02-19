@@ -1,6 +1,6 @@
 from .textChunk import TextChunk
-from model.domain.entities.knowledge.document import Document
-from model.domain.entities.knowledge.chunk import Chunk
+from domain.entities.knowledge.document import Document
+from domain.entities.knowledge.chunk import Chunk
 from typing import List
 import nltk
 from sentence_transformers import SentenceTransformer

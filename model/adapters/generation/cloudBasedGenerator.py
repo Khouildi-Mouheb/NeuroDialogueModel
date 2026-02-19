@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()  
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-from domain.entities.agent import Agent  
-from generation.agents.generatorAgent import GeneratorAgent
+
+from .generatorAgent import GeneratorAgent
 
 class CloudBasedGenerator(GeneratorAgent):
     def __init__(self, model_name: str = "llama-3.3-70b-versatile"):

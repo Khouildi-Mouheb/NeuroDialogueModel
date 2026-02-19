@@ -1,6 +1,5 @@
 
 from model.domain.entities.knowledge.chunk import Chunk
-from typing import List, Dict, Any
 
 class MetaDataExtractor:
 

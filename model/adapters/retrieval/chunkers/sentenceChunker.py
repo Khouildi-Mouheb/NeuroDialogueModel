@@ -1,6 +1,6 @@
-from .textChunk import TextChunk
-from model.domain.entities.knowledge.document import Document
-from model.domain.entities.knowledge.chunk import Chunk
+from .textChunker import TextChunk
+from domain.entities.knowledge.document import Document
+from domain.entities.knowledge.chunk import Chunk
 import nltk
 
 try:

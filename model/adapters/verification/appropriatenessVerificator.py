@@ -7,8 +7,8 @@ Checks if response tone and content are appropriate for context
 
 from typing import Optional
 
-from analysis.domain.userState import UserState
-from verification.domain.verificationResult import VerificationResult
+from domain.services.userState import UserState
+from  import VerificationResult
 from verification.domain.verificationIssue import VerificationIssue
 from .verificatorAgent import VerificatorAgent
 from verification.domain.verificationResultFactory import VerificationResultFactory

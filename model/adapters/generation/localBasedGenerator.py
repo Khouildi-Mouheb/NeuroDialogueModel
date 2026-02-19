@@ -1,8 +1,9 @@
 
 import requests
 import json
-from core.context.generatorContext import GeneratorContext
-from core.domain.agent import Agent
+from domain.context.generatorContext import GeneratorContext
+from domain.entities.agent import Agent
+
 from .generatorAgent import GeneratorAgent
 
 class LocalBasedGenerator(Agent):

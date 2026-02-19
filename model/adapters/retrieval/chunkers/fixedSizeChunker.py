@@ -1,5 +1,5 @@
 
-from .textChunk import TextChunk
+from retrieval.chunkers.textChunker import TextChunk
 from model.domain.entities.knowledge.chunk import Chunk
 from typing import Dict, Any
 from model.domain.entities.knowledge.document import Document
