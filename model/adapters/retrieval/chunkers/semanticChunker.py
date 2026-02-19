@@ -1,4 +1,4 @@
-from .textChunk import TextChunk
+from .textChunker import TextChunk
 from domain.entities.knowledge.document import Document
 from domain.entities.knowledge.chunk import Chunk
 from typing import List
