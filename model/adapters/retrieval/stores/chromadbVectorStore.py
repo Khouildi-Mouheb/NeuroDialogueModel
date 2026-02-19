@@ -1,7 +1,7 @@
 import os
 import chromadb
 from typing import Any
-from model.ports.vectorStore import VectorStore
+from model.ports.vectorStorePort import VectorStore
 
 
 class ChromaDBVectorStore(VectorStore):
@@ -13,11 +13,9 @@ class ChromaDBVectorStore(VectorStore):
         if persist_directory is None:
             base_dir = os.path.dirname(__file__)
             persist_directory = os.path.join(base_dir, "chroma_store")
-
         persist_directory = os.path.abspath(persist_directory)
         os.makedirs(persist_directory, exist_ok=True)
 
-        # ✅ THIS IS THE FIX
         self.client = chromadb.PersistentClient(
             path=persist_directory
         )
@@ -75,8 +73,8 @@ class ChromaDBVectorStore(VectorStore):
             self.collection.delete(  # Use self.collection
                 where={"document_id": document_id}
             )
-            print(f"🗑️  Deleted {chunk_count} chunks from document {document_id}")
+            print(f"  Deleted {chunk_count} chunks from document {document_id}")
         else:
-            print(f"⚠️  No chunks found for document {document_id}")
+            print(f"  No chunks found for document {document_id}")
         
         return chunk_count

@@ -1,7 +1,7 @@
 # retrieval/indexing/documentIndexer.py
 
 from model.domain.entities.knowledge.document import Document
-from model.ports.vectorStore import VectorStore
+from model.ports.vectorStorePort import VectorStore
 
 
 

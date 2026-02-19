@@ -1,103 +1,90 @@
+from typing import Any, List, Dict, Optional
+from domain.entities.agent import Agent
+from model.ports.vectorStorePort import VectorStore
+from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
+from adapters.retrieval.agents.retrievalAgent import RetrievalAgent
 
-# retrieval/agents/queryRetriever.py
 
-from model.ports.vectorStore import VectorStore
-from model.adapters.retrieval.embedding.embeddingModel import EmbeddingModel
-from typing import List, Dict, Any
+class QueryRetriever(RetrievalAgent):
+    """Retrieves relevant document chunks for a user query.
 
+    Responsibilities:
+        1. Embed the query using the embedding model
+        2. Search the vector store for similar chunks
+        3. Format and return ranked results
 
-class QueryRetriever:
-    """
-    Retrieves relevant documents for a query
-    
-    Responsibility:
-    - Take user query
-    - Embed query
-    - Search vector store
-    - Return relevant chunks
-    
     Usage:
-    retriever = QueryRetriever(vector_store, embedding_model)
-    results = retriever.retrieve("What's the refund policy?", top_k=5)
+        retriever = QueryRetriever(vector_store, embedding_model)
+        results   = retriever.retrieve("What's the refund policy?", top_k=5)
+        context   = retriever.retrieveWithContext("What's the refund policy?")
     """
-    
+
     def __init__(
         self,
         vector_store: VectorStore,
-        embedding_model: EmbeddingModel
-    ):
-        """
-        Args:
-            vector_store: Vector database to search
-            embedding_model: Model to embed queries
-        """
-        self.vector_store = vector_store
+        embedding_model: EmbeddingModel,
+    ) -> None:
+        self.vector_store    = vector_store
         self.embedding_model = embedding_model
-    
+
+    # ------------------------------------------------------------------ #
+    # RetrievalPort implementation                                         #
+    # ------------------------------------------------------------------ #
+
     def retrieve(
         self,
         query: str,
         top_k: int = 5,
-        filters: Dict[str, Any] = None
+        filters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """
-        Retrieve relevant chunks for a query
-        
+        """Retrieve relevant chunks for a query.
+
         Args:
-            query: User's question
-            top_k: Number of results to return
-            filters: Optional metadata filters
-            
+            query:   User's question.
+            top_k:   Number of results to return.
+            filters: Optional metadata filters (passed to vector store).
+
         Returns:
-            List of relevant chunks with metadata
+            List of dicts, each with:
+                rank, chunk_id, text, source, similarity_score, metadata.
         """
-        # Step 1: Embed query
-        query_embedding = self.embedding_model.embedtext(query)
-        
-        # Step 2: Search vector store
-        results = self.vector_store.query_vectors(
+        # Step 1 — embed query
+        query_embedding = self.embedding_model.embedText(query)
+
+        # Step 2 — search vector store
+        raw_results = self.vector_store.query_vectors(
             query_vector=query_embedding,
-            top_k=top_k
+            top_k=top_k,
         )
-        
-        # Step 3: Format results
-        formatted_results = []
-        for i, result in enumerate(results):
-            formatted_results.append({
-                "rank": i + 1,
-                "chunk_id": result.get("id"),
-                "text": result.get("metadata", {}).get("text", ""),
-                "source": result.get("metadata", {}).get("document_source", ""),
-                "similarity_score": 1 - result.get("distance", 1),  # Convert distance to similarity
-                "metadata": result.get("metadata", {})
-            })
-        
-        return formatted_results
-    
-    def retrieveWithContext(
-        self,
-        query: str,
-        top_k: int = 5
-    ) -> str:
-        """
-        Retrieve and format as context for LLM
-        
+
+        # Step 3 — format results
+        return [
+            {
+                "rank":             i + 1,
+                "chunk_id":         result.get("id"),
+                "text":             result.get("metadata", {}).get("text", ""),
+                "source":           result.get("metadata", {}).get("document_source", ""),
+                "similarity_score": 1 - result.get("distance", 1),  # distance → similarity
+                "metadata":         result.get("metadata", {}),
+            }
+            for i, result in enumerate(raw_results)
+        ]
+
+    def retrieveWithContext(self, query: str, top_k: int = 5) -> str:
+        """Retrieve and format results as a context string for the LLM.
+
         Args:
-            query: User's question
-            top_k: Number of results
-            
+            query:  User's question.
+            top_k:  Number of results to retrieve.
+
         Returns:
-            Formatted context string
+            Formatted context string ready to be injected into a prompt.
         """
         results = self.retrieve(query, top_k)
-        
-        # Build context string
-        context_parts = []
-        for result in results:
-            context_parts.append(
-                f"[Document {result['rank']}] "
-                f"(Source: {result['source']})\n"
-                f"{result['text']}\n"
-            )
-        
+
+        context_parts = [
+            f"[Document {r['rank']}] (Source: {r['source']})\n{r['text']}"
+            for r in results
+        ]
+
         return "\n---\n".join(context_parts)
