@@ -60,7 +60,6 @@ class ChatOrchestrator:
                         user_state["needs"] = intent_result.result.get("needs")
                 except Exception:
                     user_state.setdefault("intentsAndNeeds", None)
-
         return user_state
 
     def _embedQuery(self, query: str) -> Any:
