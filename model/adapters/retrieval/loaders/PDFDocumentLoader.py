@@ -1,5 +1,5 @@
 from .documentLoader import DocumentLoader
-from model.domain.entities.knowledge.document import Document
+from domain.entities.knowledge.document import Document
 import PyPDF2 
 
 

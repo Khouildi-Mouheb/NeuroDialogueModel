@@ -1,8 +1,6 @@
-# retrieval/embedding/embeddingModel.py
-
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from model.domain.entities.knowledge.document import Document
+from domain.entities.knowledge.document import Document
 from typing import List
 
 

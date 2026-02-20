@@ -1,5 +1,5 @@
 from .textPreprocessor import TextPreprocessor
-from model.domain.entities.knowledge.document import Document
+from domain.entities.knowledge.document import Document
 
 class TextCleaner(TextPreprocessor):
 

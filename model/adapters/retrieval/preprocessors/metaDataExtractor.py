@@ -1,5 +1,5 @@
 
-from model.domain.entities.knowledge.chunk import Chunk
+from domain.entities.knowledge.chunk import Chunk
 
 class MetaDataExtractor:
 

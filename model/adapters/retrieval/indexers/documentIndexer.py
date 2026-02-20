@@ -1,7 +1,6 @@
-# retrieval/indexing/documentIndexer.py
 
-from model.domain.entities.knowledge.document import Document
-from model.ports.vectorStorePort import VectorStore
+from domain.entities.knowledge.document import Document
+from ports.vectorStorePort import VectorStorePort
 
 
 
@@ -19,7 +18,7 @@ class DocumentIndexer:
     indexer.indexDocument(processed_document)
     """
     
-    def __init__(self, vector_store: VectorStore):
+    def __init__(self, vector_store: VectorStorePort):
         """
         Args:
             vector_store: Vector database to store chunks

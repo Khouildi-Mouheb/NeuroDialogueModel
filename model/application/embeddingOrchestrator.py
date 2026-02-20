@@ -1,144 +1,97 @@
-from typing import Optional, List, Any
-import os
-
-from model.domain.entities.knowledge.document import Document
+from typing import List, Optional
+from domain.enums.orchestrationState import OrchestrationState
+from application.config.systemComponents import SystemComponents
 
 
 class EmbeddingOrchestrator:
-    """Orchestrates loading, preprocessing, chunking, embedding and indexing.
+    """Orchestrator for the full document indexing pipeline.
 
-    Components (dependency-injected):
-    - loader: has `loadDocument(source)` -> Document
-    - preprocessor: optional, has `preprocessText(document)` -> Document
-    - chunker: optional, has `chunkText(document)` -> Document
-    - embedding_model: has `embedDocument(document)` or `embedBatch(texts)`
-    - indexer: optional, has `indexDocument(document)` OR
-               vector_store: has `addVector(vector, metadata, vector_id)`
-
-    The orchestrator is defensive: it will proceed with available
-    components and report how many chunks were indexed.
+    Pipeline
+    --------
+    1. LOADING     — load raw document from source (PDF, URL, etc.)
+    2. PREPROCESSING — clean and normalize text
+    3. CHUNKING    — split into semantically coherent chunks
+    4. EMBEDDING   — vectorize each chunk
+    5. INDEXING    — store vectors + metadata in ChromaDB
     """
 
-    def __init__(
-        self,
-        loader: Any,
-        embedding_model: Any,
-        preprocessor: Optional[Any] = None,
-        chunker: Optional[Any] = None,
-        indexer: Optional[Any] = None,
-        vector_store: Optional[Any] = None,
-    ) -> None:
-        self.loader = loader
-        self.preprocessor = preprocessor
-        self.chunker = chunker
-        self.embedding_model = embedding_model
-        self.indexer = indexer
-        self.vector_store = vector_store
+    def __init__(self, components: SystemComponents) -> None:
+        self.components = components
+        self.state = OrchestrationState.IDLE
 
-    def _ensure_document(self, doc: Document) -> Document:
-        # Basic sanity: make sure source and content exist
-        if not isinstance(doc, Document):
-            raise TypeError("loader must return a Document instance")
-        if not doc.getContent() and not doc.getCleanedContent():
-            raise ValueError("Document has no content")
-        return doc
+    def _load(self, source: str):
+        self.state = OrchestrationState.ANALYZING
+        print(f"  [LOADING] {source}")
+        return self.components.loader.loadDocument(source)
 
-    def process_and_index(self, source: str) -> int:
-        """Load document from `source`, preprocess, chunk, embed, and index.
+    def _preprocess(self, document):
+        print(f"  [PREPROCESSING] {document.getSource()}")
+        return self.components.preprocessor.preprocessText(document)
 
-        Returns: number of chunks indexed.
+    def _chunk(self, document):
+        print(f"  [CHUNKING] strategy: {self.components.chunker.__class__.__name__}")
+        return self.components.chunker.chunkText(document)
+
+    def _embed(self, document):
+        self.state = OrchestrationState.EMBEDDING
+        print(f"  [EMBEDDING] {len(document.getChunks())} chunks")
+        return self.components.embedding_model.embedDocument(document)
+
+    def _index(self, document) -> int:
+        self.state = OrchestrationState.RETRIEVING
+        print(f"  [INDEXING] storing in vector store...")
+        return self.components.indexer.indexDocument(document)
+
+    # ------------------------------------------------------------------ #
+    # Public API                                                           #
+    # ------------------------------------------------------------------ #
+
+    def indexDocument(self, source: str) -> int:
+        """Run the full pipeline for a single document.
+
+        Args:
+            source: File path or URL to the document.
+
+        Returns:
+            Number of chunks indexed.
         """
-        # 1. Load
-        document = self.loader.loadDocument(source)
-        document = self._ensure_document(document)
+        print(f"\n  Starting indexing pipeline for: {source}")
 
-        # 2. Preprocess
-        if self.preprocessor and hasattr(self.preprocessor, "preprocessText"):
-            try:
-                document = self.preprocessor.preprocessText(document)
-            except Exception as e:
-                # continue with original document but warn
-                print(f"Preprocessing failed: {e}")
+        document   = self._load(source)
+        document   = self._preprocess(document)
+        document   = self._chunk(document)
+        document   = self._embed(document)
+        count      = self._index(document)
 
-        # 3. Chunk
-        if self.chunker and hasattr(self.chunker, "chunkText"):
-            try:
-                document = self.chunker.chunkText(document)
-            except Exception as e:
-                print(f"Chunking failed: {e}")
+        self.state = OrchestrationState.COMPLETED
+        print(f"  Done — {count} chunks indexed successfully.\n")
+        return count
 
-        # 4. Embed
-        if hasattr(self.embedding_model, "embedDocument"):
-            try:
-                document = self.embedding_model.embedDocument(document)
-            except Exception as e:
-                print(f"Embedding document failed: {e}")
-        else:
-            # fallback: embed each chunk text via embedText/embedtext
-            if hasattr(self.embedding_model, "embedText") or hasattr(self.embedding_model, "embedtext"):
-                texts = [c.getText() for c in document.getChunks()]
-                embeddings = []
-                try:
-                    if hasattr(self.embedding_model, "embedBatch"):
-                        embeddings = self.embedding_model.embedBatch(texts)
-                    else:
-                        for t in texts:
-                            if hasattr(self.embedding_model, "embedText"):
-                                embeddings.append(self.embedding_model.embedText(t))
-                            else:
-                                embeddings.append(self.embedding_model.embedtext(t))
-                    # attach embeddings
-                    for chunk, emb in zip(document.getChunks(), embeddings):
-                        chunk.setEmbedding(emb)
-                except Exception as e:
-                    print(f"Embedding chunks fallback failed: {e}")
+    def indexMultipleDocuments(self, sources: List[str]) -> int:
+        """Run the full pipeline for multiple documents.
 
-        # 5. Index
-        indexed = 0
-        # Prefer indexer.indexDocument
-        if self.indexer and hasattr(self.indexer, "indexDocument"):
-            try:
-                indexed = self.indexer.indexDocument(document)
-                return indexed
-            except Exception as e:
-                print(f"Indexer failed: {e}")
+        Args:
+            sources: List of file paths or URLs.
 
-        # Else, try vector_store direct indexing per-chunk
-        if self.vector_store and hasattr(self.vector_store, "addVector"):
-            for chunk in document.getChunks():
-                emb = chunk.getEmbedding()
-                if emb is None:
-                    print(f"Skipping chunk {chunk.getId()} (no embedding)")
-                    continue
-
-                metadata = {
-                    "chunk_id": chunk.getId(),
-                    "document_id": document.getId(),
-                    "document_source": document.getSource(),
-                    "chunk_index": chunk.getChunkIndex(),
-                    "text": chunk.getText(),
-                    **(chunk.getMetadata() or {}),
-                }
-
-                try:
-                    # many store adapters expect args (vector, metadata, vector_id)
-                    try:
-                        self.vector_store.addVector(vector=emb, metadata=metadata, vector_id=chunk.getId())
-                    except TypeError:
-                        # fallback to addVectors plural signature
-                        if hasattr(self.vector_store, "addVectors"):
-                            self.vector_store.addVectors([emb], [metadata])
-                        else:
-                            raise
-                    indexed += 1
-                except Exception as e:
-                    print(f"Failed to index chunk {chunk.getId()}: {e}")
-
-        print(f"Indexed {indexed} chunks from {document.getSource()}")
-        return indexed
-
-    def process_and_index_multiple(self, sources: List[str]) -> int:
+        Returns:
+            Total number of chunks indexed across all documents.
+        """
         total = 0
-        for s in sources:
-            total += self.process_and_index(s)
+        for source in sources:
+            total += self.indexDocument(source)
+        print(f"  Total indexed: {total} chunks from {len(sources)} documents.")
         return total
+
+    def deleteDocument(self, document_id: str) -> int:
+        """Remove all chunks belonging to a document from the vector store.
+
+        Args:
+            document_id: The document ID to delete.
+
+        Returns:
+            Number of chunks deleted.
+        """
+        print(f"  [DELETING] document_id: {document_id}")
+        count = self.components.vector_store.deleteDocument(document_id)
+        print(f"  Deleted {count} chunks.")
+        return count

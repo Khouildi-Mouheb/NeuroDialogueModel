@@ -1,5 +1,5 @@
 from abc import ABC , abstractmethod
-from model.domain.entities.knowledge.document import Document
+from domain.entities.knowledge.document import Document
 
 class DocumentLoader(ABC):
 

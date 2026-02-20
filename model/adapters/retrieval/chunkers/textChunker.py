@@ -1,6 +1,6 @@
 from abc import ABC , abstractmethod
-from model.domain.entities.knowledge.document import Document
-from model.domain.entities.knowledge.chunk import Chunk
+from domain.entities.knowledge.document import Document
+from domain.entities.knowledge.chunk import Chunk
 
 
 class TextChunk(ABC):

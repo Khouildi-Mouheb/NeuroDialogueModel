@@ -1,6 +1,5 @@
 from typing import Any, List, Dict, Optional
-from domain.entities.agent import Agent
-from model.ports.vectorStorePort import VectorStore
+from ports.vectorStorePort import VectorStorePort
 from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 from adapters.retrieval.agents.retrievalAgent import RetrievalAgent
 
@@ -21,15 +20,13 @@ class QueryRetriever(RetrievalAgent):
 
     def __init__(
         self,
-        vector_store: VectorStore,
+        vector_store: VectorStorePort,
         embedding_model: EmbeddingModel,
     ) -> None:
         self.vector_store    = vector_store
         self.embedding_model = embedding_model
 
-    # ------------------------------------------------------------------ #
-    # RetrievalPort implementation                                         #
-    # ------------------------------------------------------------------ #
+
 
     def retrieve(
         self,
