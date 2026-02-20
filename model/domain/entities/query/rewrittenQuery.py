@@ -1,5 +1,5 @@
 
-from core.domain.query import Query
+from .query import Query
 
 class RewrittenQuery(Query):
     def __init__(self, text: str, original_query: Query = None):

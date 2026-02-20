@@ -57,7 +57,7 @@ class EmotionDetectionAgent(Agent, EmotionPort):
             ),
         }
 
-    def formatForCoach(self, text: str) -> str:
+    def formatForoach(self, text: str) -> str:
         emotion_result = self.detect_emotions(text, top_k=3)
         emotions = emotion_result.emotions
         scores = emotion_result.emotionsWithScore

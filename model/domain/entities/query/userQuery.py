@@ -1,4 +1,4 @@
-from core.domain.query import Query
+from .query import Query
 
 class UserQuery(Query):
     def __init__(self, text: str, user_id: str = None, timestamp: str = None):

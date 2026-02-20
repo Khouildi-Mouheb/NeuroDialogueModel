@@ -1,10 +1,10 @@
 from typing import Optional, Tuple
-from domain.entities.agent import Agent
 from domain.services.userState import UserState
 from domain.enums.verificationStatus import VerificationStatus
 from domain.enums.orchestrationState import OrchestrationState
 from domain.valueObjects.aggregatedVerificationResult import AggregatedVerificationResult
 from domain.context.generatorContext import GeneratorContext
+from domain.entities.query.userQuery import UserQuery
 from application.config.systemComponents import SystemComponents
 
 
@@ -25,15 +25,17 @@ class ChatOrchestrator:
         self.components = components
         self.state = OrchestrationState.IDLE
 
-
+    # ------------------------------------------------------------------ #
+    # Pipeline steps                                                       #
+    # ------------------------------------------------------------------ #
 
     def _analyze(self, user_message: str) -> UserState:
         self.state = OrchestrationState.ANALYZING
         user_state = UserState()
 
         for agent in self.components.analysis_agents:
-            if hasattr(agent, "detect_emotions"):
-                user_state.emotions = agent.detect_emotions(user_message)
+            if hasattr(agent, "detectEmotions"):
+                user_state.emotions = agent.detectEmotions(user_message)
 
             if hasattr(agent, "analyze"):
                 result = agent.analyze(user_message)
@@ -56,8 +58,9 @@ class ChatOrchestrator:
         user_state: UserState,
     ) -> GeneratorContext:
         self.state = OrchestrationState.PROMPTING
+        user_query = UserQuery(text=user_message)
         return GeneratorContext(
-            query=user_message,
+            user_query=user_query,
             retrieved_chunks=retrieved,
             user_state=user_state,
         )
@@ -76,9 +79,9 @@ class ChatOrchestrator:
         if len(self.components.verifiers) < 3:
             return reply, None
 
-        empathy_result       = self.components.verifiers[0].verify(reply, user_state=user_state)
+        empathy_result         = self.components.verifiers[0].verify(reply, user_state=user_state)
         appropriateness_result = self.components.verifiers[1].verify(reply, user_state=user_state)
-        safety_result        = self.components.verifiers[2].verify(reply, user_state=user_state)
+        safety_result          = self.components.verifiers[2].verify(reply, user_state=user_state)
 
         aggregated = AggregatedVerificationResult(
             empathy=empathy_result,
@@ -94,6 +97,9 @@ class ChatOrchestrator:
 
         return reply, aggregated
 
+    # ------------------------------------------------------------------ #
+    # Public API                                                           #
+    # ------------------------------------------------------------------ #
 
     def handleUserMessage(
         self,
