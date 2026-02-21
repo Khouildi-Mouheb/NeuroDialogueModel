@@ -49,6 +49,7 @@ async def chat(request: Request):
 
 @app.post("/index/")
 async def index(request: Request):
+    print('start indexing')
     from presentation.routers.embeddingRouter import IndexRequest, index as index_handler
     body = await request.json()
     req = IndexRequest(**body)

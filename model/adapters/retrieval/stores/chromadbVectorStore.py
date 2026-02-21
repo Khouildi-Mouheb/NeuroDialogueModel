@@ -78,3 +78,25 @@ class ChromaDBVectorStore(VectorStorePort):
             print(f"  No chunks found for document {document_id}")
         
         return chunk_count
+    
+    def emptyVectorDb(self) -> int:
+        """
+        Delete all vectors from the collection.
+
+        Returns:
+            Number of chunks deleted
+        """
+        total = self.collection.count()
+
+        if total == 0:
+            print("  VectorDB is already empty")
+            return 0
+
+        # Delete and recreate the collection — fastest way to empty it
+        self.client.delete_collection(self.collection.name)
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection.name
+        )
+
+        print(f"  Emptied VectorDB — {total} chunks deleted")
+        return total

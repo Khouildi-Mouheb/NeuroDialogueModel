@@ -12,6 +12,8 @@ model/.pytest_cache/*
 *.pyo
 *.pyd
 
+
+model/adapters/retrieval/stores/chroma_store/*
 tests/
 
 app/LocalChat.py
