@@ -16,7 +16,8 @@ class SystemComponents:
     embedding_model: Any = None         
 
     
-    retriever:       Any = None         
+    retriever:       Any = None   
+    generator :      Any =None      
     analysis_agents: List[Any] = field(default_factory=list) 
     verifiers:       List[Any] = field(default_factory=list) 
 

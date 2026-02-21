@@ -13,7 +13,7 @@ class SafetyVerificator(VerificatorAgent):
     Uses toxic-bert model to detect harmful content.
     """
 
-    def __init__(self, threshold: float = 0.8):
+    def __init__(self, threshold: float = 0.1):
         super().__init__(name="SafetyVerificator")
         self.threshold = threshold
 

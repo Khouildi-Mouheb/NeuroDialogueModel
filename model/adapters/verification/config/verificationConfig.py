@@ -12,10 +12,10 @@ from typing import Dict
 class VerificationConfig:
     """Configuration for verification system"""
     
-    # Thresholds
+
     safety_threshold: float = 0.8
     empathy_threshold: float = 0.6
-    appropriateness_threshold: float = 0.7
+    appropriateness_threshold: float = 0.1
     
     # Model paths
     safety_model_path: str = "unitary/toxic-bert"
@@ -33,18 +33,16 @@ class VerificationConfig:
         'appropriateness': 0.3
     })
     
-    # Logging
     log_all_verifications: bool = True
     log_failed_only: bool = False
     
     def __post_init__(self):
         """Validate configuration"""
-        # Ensure thresholds are valid
         for threshold in [self.safety_threshold, self.empathy_threshold, self.appropriateness_threshold]:
             if not 0.0 <= threshold <= 1.0:
                 raise ValueError(f"Thresholds must be between 0 and 1")
         
-        # Ensure weights sum to reasonable value
+
         total_weight = sum(self.score_weights.values())
         if not 0.9 <= total_weight <= 1.1:
             raise ValueError(f"Score weights should sum to ~1.0, got {total_weight}")
