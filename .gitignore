@@ -12,6 +12,7 @@ model/.pytest_cache/*
 *.pyo
 *.pyd
 
+CP/*
 
 model/adapters/retrieval/stores/chroma_store/*
 tests/

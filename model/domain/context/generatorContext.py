@@ -33,7 +33,7 @@ class GeneratorContext(Context):
     def format_context_for_prompt(self) -> str:
         context_parts = []
         context_parts.append(
-        "answer the query based on the retrieved docs . if theirs now relevant docs , answer in two lines"
+            "answer the query based on the retrieved docs . if theirs now relevant docs , answer in two lines"
         )
         context_parts.append(f"User Query: {self.user_query}")
         if self.rewritten_query:
@@ -41,7 +41,10 @@ class GeneratorContext(Context):
         if self.retrieved_chunks:
             context_parts.append("Retrieved Information:")
             for i, chunk in enumerate(self.retrieved_chunks, 1):
-                context_parts.append(f"Chunk {i}: {chunk.getText()}")
+                if isinstance(chunk, dict):
+                    context_parts.append(f"Chunk {i}: {chunk.get('text', '')}")
+                else:
+                    context_parts.append(f"Chunk {i}: {chunk.getText()}")
         if self.user_state:
             context_parts.append(f"User State: {self.user_state.__str__()}")
         return "\n\n".join(context_parts)
