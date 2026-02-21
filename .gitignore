@@ -15,6 +15,15 @@ model/.pytest_cache/*
 CP/*
 
 model/adapters/retrieval/stores/chroma_store/*
+model/adapters/retrieval/stores/chroma_store/chroma.sqlite3
+
+
+# SQLite databases
+*.sqlite3
+*.db
+*.sqlite
+
+
 tests/
 
 app/LocalChat.py
