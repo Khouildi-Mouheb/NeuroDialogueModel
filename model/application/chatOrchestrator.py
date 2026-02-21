@@ -9,25 +9,13 @@ from application.config.systemComponents import SystemComponents
 
 
 class ChatOrchestrator:
-    """End-to-end orchestrator for the chat pipeline.
 
-    Pipeline
-    --------
-    1. ANALYZING   — detect emotions, intents, needs → UserState
-    2. EMBEDDING   — embed the user query
-    3. RETRIEVING  — fetch relevant chunks from vector store
-    4. PROMPTING   — assemble GeneratorContext
-    5. GENERATING  — stream or generate full response
-    6. VERIFYING   — run Empathy / Appropriateness / Safety verificators
-    """
 
     def __init__(self, components: SystemComponents) -> None:
         self.components = components
         self.state = OrchestrationState.IDLE
 
-    # ------------------------------------------------------------------ #
-    # Pipeline steps                                                       #
-    # ------------------------------------------------------------------ #
+
 
     def _analyze(self, user_message: str) -> UserState:
         self.state = OrchestrationState.ANALYZING
@@ -97,9 +85,7 @@ class ChatOrchestrator:
 
         return reply, aggregated
 
-    # ------------------------------------------------------------------ #
-    # Public API                                                           #
-    # ------------------------------------------------------------------ #
+
 
     def handleUserMessage(
         self,
