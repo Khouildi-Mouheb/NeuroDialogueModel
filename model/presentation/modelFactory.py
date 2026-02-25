@@ -16,7 +16,7 @@ from adapters.verification.appropriatenessVerificator import AppropriatenessVeri
 from adapters.verification.safetyVerificator import SafetyVerificator
 
 
-COLLECTION_NAME = "neurodialogue"  # shared between both orchestrators
+COLLECTION_NAME = "neurodialogue"  
 
 
 class ModelFactory:

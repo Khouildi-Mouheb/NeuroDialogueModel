@@ -1,7 +1,7 @@
 import os
 import chromadb
 from typing import Any
-from ports.vectorStorePort import VectorStorePort
+from domain.ports.vectorStorePort import VectorStorePort
 
 
 class ChromaDBVectorStore(VectorStorePort):

@@ -4,7 +4,7 @@ from domain.entities.agent import Agent
 from domain.enums.intentLabels import IntentLabel
 from domain.enums.needsLabels import NeedLabel
 from domain.valueObjects.intentAndNeedsResult import IntentAndNeedsResult
-from ports.intentAndNeedsPort import IntentAndNeedsPort
+from domain.ports.intentAndNeedsPort import IntentAndNeedsPort
 
 
 class IntentNeedsAgent(Agent, IntentAndNeedsPort):

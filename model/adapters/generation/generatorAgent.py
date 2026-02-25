@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from domain.context.generatorContext import GeneratorContext
 from domain.entities.agent import Agent
-from ports.generationPort import GenerationPort
+from domain.ports.generationPort import GenerationPort
 
 
 class GeneratorAgent(Agent, GenerationPort):

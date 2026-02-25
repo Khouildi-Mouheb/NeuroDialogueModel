@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, List, Dict, Optional
 from domain.entities.agent import Agent
-from ports.retrievalPort import RetrievalPort
+from domain.ports.retrievalPort import RetrievalPort
 
 
 class RetrievalAgent(Agent, RetrievalPort):

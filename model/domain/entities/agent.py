@@ -1,5 +1,5 @@
 from abc import ABC , abstractmethod
-from ports import generationPort
+from domain.ports import generationPort
 
 class Agent( ABC) :
     pass

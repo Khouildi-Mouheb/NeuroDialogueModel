@@ -1,5 +1,5 @@
 from typing import Any, List, Dict, Optional
-from ports.vectorStorePort import VectorStorePort
+from domain.ports.vectorStorePort import VectorStorePort
 from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 from adapters.retrieval.agents.retrievalAgent import RetrievalAgent
 

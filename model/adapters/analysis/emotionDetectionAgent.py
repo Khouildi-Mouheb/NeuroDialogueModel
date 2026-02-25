@@ -4,7 +4,7 @@ import torch
 from domain.entities.agent import Agent
 from domain.enums.emotionsLabels import EmotionLabels
 from domain.valueObjects.emotionResult import EmotionResult
-from ports.emotionPort import EmotionPort
+from domain.ports.emotionPort import EmotionPort
 
 
 class EmotionDetectionAgent(Agent, EmotionPort):

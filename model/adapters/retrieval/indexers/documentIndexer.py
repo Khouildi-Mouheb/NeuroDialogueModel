@@ -1,6 +1,6 @@
 
 from domain.entities.knowledge.document import Document
-from ports.vectorStorePort import VectorStorePort
+from domain.ports.vectorStorePort import VectorStorePort
 
 
 
