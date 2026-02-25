@@ -110,6 +110,7 @@ class ChatOrchestrator:
         user_state  = self._analyze(user_message)
         _           = self._embed(user_message)
         retrieved   = self._retrieve(user_message, top_k=top_k)
+        print(f"the retrieved docs are : {retrieved}")
         context     = self._buildContext(user_message, retrieved, user_state)
         reply       = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state)

@@ -3,7 +3,7 @@ from typing import Optional
 from domain.entities.agent import Agent
 from domain.services.userState import UserState
 from domain.valueObjects.verificationResult import VerificationResult
-from ports.verificationPort import VerificationPort
+from domain.ports.verificationPort import VerificationPort
 
 
 class VerificatorAgent(Agent, VerificationPort):
