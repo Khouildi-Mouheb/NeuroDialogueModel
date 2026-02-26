@@ -46,3 +46,7 @@ class EmpathyVerificationResult(VerificationResult):
             recommendations=recommendations,
             metadata=metadata or {},
         )
+
+
+    def __repr__(self):
+        return f" (empathy_score={self.empathy_score:.2f})"

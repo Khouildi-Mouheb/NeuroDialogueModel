@@ -101,3 +101,13 @@ class AggregatedVerificationResult:
             f"scores={self.all_scores}, "
             f"issues={[i.value for i in self.all_issues]})"
         )
+    
+
+    def __repr__(self):
+        return (
+            f"AggregatedVerificationResult(status={self.status.value}, "
+            f"empathy_score={self.empathy.empathy_score:.2f}, "
+            f"appropriateness_score={self.appropriateness.appropriateness_score:.2f}, "
+            f"safety_score={self.safety.safety_score:.2f}, "
+            f"issues={[i.value for i in self.all_issues]})"
+        )

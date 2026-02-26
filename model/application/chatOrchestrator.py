@@ -68,9 +68,13 @@ class ChatOrchestrator:
             return reply, None
 
         empathy_result         = self.components.verifiers[0].verify(reply, user_state=user_state)
+        print(f"the empathy result is : {empathy_result}")
         appropriateness_result = self.components.verifiers[1].verify(reply, user_state=user_state)
+        print(f"the appropriateness result is : {appropriateness_result}")
         safety_result          = self.components.verifiers[2].verify(reply, user_state=user_state)
+        print(f"the safety result is : {safety_result}")
 
+        
         aggregated = AggregatedVerificationResult(
             empathy=empathy_result,
             appropriateness=appropriateness_result,

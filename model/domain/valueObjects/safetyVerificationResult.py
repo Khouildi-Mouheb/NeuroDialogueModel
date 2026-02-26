@@ -50,3 +50,7 @@ class SafetyVerificationResult(VerificationResult):
             fallback_response=fallback_response,
             metadata=metadata or {},
         )
+    
+
+    def __repr__(self):
+        return f" (safety_score={self.safety_score:.2f})"

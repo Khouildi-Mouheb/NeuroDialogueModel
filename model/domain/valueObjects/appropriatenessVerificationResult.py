@@ -47,3 +47,7 @@ class AppropriatenessVerificationResult(VerificationResult):
             recommendations=recommendations,
             metadata=metadata or {},
         )
+    
+
+    def __repr__(self):
+        return f" (appropriateness_score={self.appropriateness_score:.2f})"
