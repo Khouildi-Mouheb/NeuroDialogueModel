@@ -14,9 +14,17 @@ model/.pytest_cache/*
 
 CP/*
 
+C:\Users\Moi\Desktop\Neurodialogue\chatbotapp\model\adapters\retrieval\stores\chroma_store\chroma.sqlite3
+
 model/adapters/retrieval/stores/chroma_store/*
 model/adapters/retrieval/stores/chroma_store/chroma.sqlite3
 
+# ChromaDB files
+model/adapters/retrieval/stores/chroma_store/
+model/adapters/retrieval/stores/chroma_store/chroma.sqlite3
+model/adapters/retrieval/stores/chroma_store/*.sqlite3
+model/adapters/retrieval/stores/chroma_store/**/*.sqlite3
+model/adapters/retrieval/stores/chroma_store/**/*.parquet
 
 # SQLite databases
 *.sqlite3
