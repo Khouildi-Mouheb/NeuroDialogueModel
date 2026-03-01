@@ -5,9 +5,9 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from core.context.context import Context
-from core.domain.userQuery import UserQuery
-from infrastructure.embedding.embeddingModel import EmbeddingModel
+from domain.context.context import Context
+from domain.entities.query.userQuery import UserQuery
+from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 
 
 

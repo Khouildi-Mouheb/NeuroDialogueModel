@@ -3,6 +3,7 @@ from application.embeddingOrchestrator import EmbeddingOrchestrator
 from application.config.systemComponents import SystemComponents
 from adapters.analysis.emotionDetectionAgent import EmotionDetectionAgent
 from adapters.analysis.intentAndNeedsAgent import IntentNeedsAgent
+from adapters.analysis.queryClassifierAdapter import QueryClassifierAdapter
 from adapters.generation.cloudBasedGenerator import CloudBasedGenerator
 from adapters.retrieval.agents.queryRetriever import QueryRetriever
 from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
@@ -38,6 +39,7 @@ class ModelFactory:
             analysis_agents = [
                                 EmotionDetectionAgent(),
                                 IntentNeedsAgent(),
+                                QueryClassifierAdapter(),
                                ],
             verifiers       = [
                                 EmpathyVerificator(),

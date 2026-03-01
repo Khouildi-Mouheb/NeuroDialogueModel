@@ -29,7 +29,13 @@ class ChatOrchestrator:
                 result = agent.analyze(user_message)
                 user_state.intentsAndNeeds = result
 
-        return user_state
+            if hasattr(agent, "classifyQuery"):
+                query = UserQuery(text=user_message)
+                queryType = agent.classifyQuery(query)
+                print(f"type of queryType is : {type(queryType)}")
+                print(f'result from the query classifier is : {queryType}')
+
+        return user_state  
 
     def _embed(self, user_message: str):
         self.state = OrchestrationState.EMBEDDING
