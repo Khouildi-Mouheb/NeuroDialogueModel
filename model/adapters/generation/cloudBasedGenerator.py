@@ -4,6 +4,7 @@ from groq import Groq
 from dotenv import load_dotenv
 from domain.context.generatorContext import GeneratorContext
 from adapters.generation.generatorAgent import GeneratorAgent
+from typing import Optional
 
 load_dotenv()
 
@@ -64,3 +65,20 @@ class CloudBasedGenerator(GeneratorAgent):
         except Exception as e:
             print(f"Error in CloudBasedGenerator: {str(e)}")
             return f"[ERROR] {str(e)}"
+        
+
+    def generateSimpleResponse(self, user_message: str, queryType: Optional[str] = None) -> str:
+            prompt = f"Generate a concise and friendly response to the following {queryType} message: \"{user_message}\". Keep it under 20 words."
+            try:
+                completion = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.7,
+                    max_tokens=50,
+                    stream=False,
+                )
+                return completion.choices[0].message.content.strip()
+
+            except Exception as e:
+                print(f"Error in generateSimpleResponse: {str(e)}")
+                return f"[ERROR] {str(e)}"

@@ -32,29 +32,19 @@ class QueryRetriever(RetrievalAgent):
         self,
         query: str,
         top_k: int = 5,
+        queryType: Optional[str] = None,
         filters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
-        """Retrieve relevant chunks for a query.
 
-        Args:
-            query:   User's question.
-            top_k:   Number of results to return.
-            filters: Optional metadata filters (passed to vector store).
-
-        Returns:
-            List of dicts, each with:
-                rank, chunk_id, text, source, similarity_score, metadata.
-        """
-        # Step 1 — embed query
         query_embedding = self.embedding_model.embedText(query)
 
-        # Step 2 — search vector store
         raw_results = self.vector_store.query_vectors(
             query_vector=query_embedding,
             top_k=top_k,
+            collection=queryType,
+            filters=filters,
         )
 
-        # Step 3 — format results
         return [
             {
                 "rank":             i + 1,

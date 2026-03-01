@@ -1,6 +1,5 @@
 from domain.ports.queryClassifierPort import QueryClassifierPort
 from domain.entities.agent import Agent
-from domain.entities.query.userQuery import UserQuery
 from typing import List
 from domain.enums.queryCategoryMappings import QueryCategoryMappings
 from transformers import pipeline
@@ -16,11 +15,10 @@ class QueryClassifierAdapter(Agent, QueryClassifierPort):
             model=self.modelName,
         )
 
-    def classifyQuery(self, query: UserQuery) -> str:
+    def classifyQuery(self, text: str) -> str:
         candidateLabels = [label.value for label in self.classificationLabels]
-
         result = self.classifier(
-            sequences=query.text,
+            sequences=text,
             candidate_labels=candidateLabels,
         )
         return result["labels"][0]

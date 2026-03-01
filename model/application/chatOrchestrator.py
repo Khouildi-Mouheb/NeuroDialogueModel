@@ -28,31 +28,37 @@ class ChatOrchestrator:
             if hasattr(agent, "analyze"):
                 result = agent.analyze(user_message)
                 user_state.intentsAndNeeds = result
-
+        return user_state
+    
+    def _classifyQuery(self, user_message: str) -> Optional[str]:
+        for agent in self.components.analysis_agents:
             if hasattr(agent, "classifyQuery"):
-                query = UserQuery(text=user_message)
-                queryType = agent.classifyQuery(query)
-                print(f"type of queryType is : {type(queryType)}")
-                print(f'result from the query classifier is : {queryType}')
-
-        return user_state  
-
+                category = agent.classifyQuery(user_message)
+                return category
+        return None
+    
     def _embed(self, user_message: str):
         self.state = OrchestrationState.EMBEDDING
         return self.components.embedding_model.embedText(user_message)
 
-    def _retrieve(self, user_message: str, top_k: int = 5):
+    def _retrieve(self, user_message: str, 
+                  top_k: int = 5,
+                  queryType: Optional[str] = None) -> list:
         self.state = OrchestrationState.RETRIEVING
-        return self.components.retriever.retrieve(user_message, top_k=top_k)
+        return self.components.retriever.retrieve(user_message, top_k=top_k, queryType=queryType)
 
     def _buildContext(
         self,
         user_message: str,
-        retrieved: list,
-        user_state: UserState,
+        retrieved: list = None,
+        user_state: UserState = None,
+        queryType: Optional[str] = None,
+
     ) -> GeneratorContext:
         self.state = OrchestrationState.PROMPTING
-        user_query = UserQuery(text=user_message)
+        user_query = UserQuery(
+            text=user_message,
+            queryType=queryType)
         return GeneratorContext(
             user_query=user_query,
             retrieved_chunks=retrieved,
@@ -66,7 +72,7 @@ class ChatOrchestrator:
     def _verify(
         self,
         reply: str,
-        user_state: UserState,
+        user_state: UserState = None,
     ) -> Tuple[str, Optional[AggregatedVerificationResult]]:
         self.state = OrchestrationState.VERIFYING
 
@@ -102,10 +108,17 @@ class ChatOrchestrator:
         user_message: str,
         top_k: int = 5,
     ) -> str:
+        
+        queryType   = self._classifyQuery(user_message)
+        if queryType == 'greetings_and_bye':
+            reply = self.components.generator.generateSimpleResponse(user_message, queryType=queryType)
+            final_reply, aggregated = self._verify(reply, user_state)
+            return final_reply, aggregated
+        
         user_state  = self._analyze(user_message)
-        _           = self._embed(user_message)
-        retrieved   = self._retrieve(user_message, top_k=top_k)
-        context     = self._buildContext(user_message, retrieved, user_state)
+        _           = self._embed(user_message )
+        retrieved   = self._retrieve(user_message, top_k=top_k , queryType=queryType)
+        context     = self._buildContext(user_message, retrieved, user_state , queryType=queryType)
         reply       = self._generate(context)
         final_reply, _ = self._verify(reply, user_state)
 
@@ -117,11 +130,20 @@ class ChatOrchestrator:
         user_message: str,
         top_k: int = 5,
     ) -> Tuple[str, Optional[AggregatedVerificationResult]]:
+
+        queryType   = self._classifyQuery(user_message)
+
+
+        if queryType == 'greetings_and_bye':
+            reply = self.components.generator.generateSimpleResponse(user_message, queryType=queryType)
+            final_reply, aggregated = self._verify(reply)
+            return final_reply, None
+        
         user_state  = self._analyze(user_message)
         _           = self._embed(user_message)
-        retrieved   = self._retrieve(user_message, top_k=top_k)
+        retrieved   = self._retrieve(user_message, top_k=top_k , queryType=queryType)
         print(f"the retrieved docs are : {retrieved}")
-        context     = self._buildContext(user_message, retrieved, user_state)
+        context     = self._buildContext(user_message, retrieved, user_state , queryType=queryType)
         reply       = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state)
 

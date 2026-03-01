@@ -34,10 +34,25 @@ class ChromaDBVectorStore(VectorStorePort):
             ids=[vector_id]
         )
 
-    def query_vectors(self, query_vector: Any, top_k: int = 5):
-        results = self.collection.query(
+    def query_vectors(self, 
+                    query_vector: Any, 
+                    top_k: int = 5, 
+                    collection: str | None = None, 
+                    filters: dict | None = None) -> list:
+        
+        active_collection = self.collection 
+        
+        if collection:
+            try:
+                active_collection = self.client.get_collection(collection)
+            except Exception:
+                print(f"  Collection '{collection}' not found, falling back to default '{self.collection.name}'")
+                active_collection = self.collection
+        
+        results = active_collection.query(
             query_embeddings=[query_vector],
-            n_results=top_k
+            n_results=top_k,
+            where=filters if filters else None
         )
 
         return [
@@ -48,7 +63,6 @@ class ChromaDBVectorStore(VectorStorePort):
             }
             for i in range(len(results["ids"][0]))
         ]
-    
 
 
     def deleteDocument(self, document_id: str) -> int:

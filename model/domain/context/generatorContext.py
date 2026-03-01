@@ -32,19 +32,53 @@ class GeneratorContext(Context):
     
     def format_context_for_prompt(self) -> str:
         context_parts = []
+
         context_parts.append(
-            "answer the query based on the retrieved docs . if theirs now relevant docs , answer in two lines"
+            "You are Neurodialogue, a compassionate and intelligent emotional support assistant.\n"
+            "Your role is to provide empathetic, helpful, and grounded responses.\n"
+            "Answer ONLY based on the retrieved documents below.\n"
+            "If no relevant documents are found, provide a brief and empathetic 2-line response."
         )
-        context_parts.append(f"User Query: {self.user_query}")
-        if self.rewritten_query:
-            context_parts.append(f"Rewritten Query: {self.rewritten_query}")
+
+        if self.user_state:
+            emotions   = getattr(self.user_state, "emotions", None)
+            intents    = getattr(self.user_state, "intentsAndNeeds", None)
+
+            if emotions or intents:
+                context_parts.append("── User Profile ──")
+            if emotions:
+                context_parts.append(f"Detected Emotions   : {emotions}")
+            if intents:
+                context_parts.append(f"Intents and Needs   : {intents}")
+
+        context_parts.append("── Query ──")
+        context_parts.append(f"Original Query   : {self.user_query}")
+        if self.rewritten_query and self.rewritten_query != self.user_query:
+            context_parts.append(f"Rewritten Query  : {self.rewritten_query}")
+
         if self.retrieved_chunks:
-            context_parts.append("Retrieved Information:")
+            context_parts.append("── Retrieved Documents ──")
             for i, chunk in enumerate(self.retrieved_chunks, 1):
                 if isinstance(chunk, dict):
-                    context_parts.append(f"Chunk {i}: {chunk.get('text', '')}")
+                    text     = chunk.get("text", "").strip()
+                    metadata = chunk.get("metadata", {})
+                    source   = metadata.get("source", "Unknown")
+                    context_parts.append(f"[{i}] Source: {source}\n{text}")
                 else:
-                    context_parts.append(f"Chunk {i}: {chunk.getText()}")
-        if self.user_state:
-            context_parts.append(f"User State: {self.user_state.__str__()}")
+                    context_parts.append(f"[{i}] {chunk.getText().strip()}")
+        else:
+            context_parts.append("── Retrieved Documents ──")
+            context_parts.append("No relevant documents found.")
+
+        
+        context_parts.append(
+            "── Instructions ──\n"
+            "- Be empathetic and concise.\n"
+            "- Ground your response in the retrieved documents.\n"
+            "- If the user seems distressed, acknowledge their feelings first.\n"
+            "- Never fabricate information.\n"
+            "- IMPORTANT: Never mention the documents, chunks, or retrieved information in your response.\n"
+            "- Speak naturally as if the knowledge is your own, do not reference any sources or documents."
+        )
+
         return "\n\n".join(context_parts)
