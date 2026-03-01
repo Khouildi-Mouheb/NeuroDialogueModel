@@ -60,7 +60,7 @@ class CloudBasedGenerator(GeneratorAgent):
                 max_tokens=300,
                 stream=False,
             )
-            return completion.choices[0].message.content
+            return completion.choices[0].message.content.strip()
 
         except Exception as e:
             print(f"Error in CloudBasedGenerator: {str(e)}")

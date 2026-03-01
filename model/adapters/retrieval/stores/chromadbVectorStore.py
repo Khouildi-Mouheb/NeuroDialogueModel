@@ -60,6 +60,7 @@ class ChromaDBVectorStore(VectorStorePort):
                 "id": results["ids"][0][i],
                 "distance": results["distances"][0][i],
                 "metadata": results["metadatas"][0][i],
+                "text":     results["documents"][0][i],  
             }
             for i in range(len(results["ids"][0]))
         ]

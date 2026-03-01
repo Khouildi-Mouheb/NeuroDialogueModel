@@ -28,6 +28,8 @@ class ChatOrchestrator:
             if hasattr(agent, "analyze"):
                 result = agent.analyze(user_message)
                 user_state.intentsAndNeeds = result
+                user_state.intents = result.result['intents']
+                user_state.needs = result.result['needs']
         return user_state
     
     def _classifyQuery(self, user_message: str) -> Optional[str]:
@@ -144,6 +146,7 @@ class ChatOrchestrator:
         retrieved   = self._retrieve(user_message, top_k=top_k , queryType=queryType)
         print(f"the retrieved docs are : {retrieved}")
         context     = self._buildContext(user_message, retrieved, user_state , queryType=queryType)
+        print(f"the context for generation is : {context.format_context_for_prompt()}")
         reply       = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state)
 

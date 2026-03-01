@@ -19,10 +19,6 @@ class EmotionDetectionAgent(Agent, EmotionPort):
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
         self.emotion_labels: List[EmotionLabels] = emotion_labels or list(EmotionLabels)
 
-    # ------------------------------------------------------------------ #
-    # EmotionPort implementation                                           #
-    # ------------------------------------------------------------------ #
-
     def detectEmotions(self, text: str, top_k: int = 3) -> EmotionResult:
         print("start detecting emotions!")
         emotion_result = EmotionResult()
