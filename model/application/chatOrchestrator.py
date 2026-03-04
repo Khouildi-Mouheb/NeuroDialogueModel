@@ -49,7 +49,7 @@ class ChatOrchestrator:
         self.state = OrchestrationState.RETRIEVING
         return self.components.retriever.retrieve(user_message, top_k=top_k, queryType=queryType)
 
-    def _buildContext(
+    def _buildGeneratorContext(
         self,
         user_message: str,
         retrieved: list = None,
@@ -110,7 +110,7 @@ class ChatOrchestrator:
         user_message: str,
         top_k: int = 5,
     ) -> str:
-        
+        print("Handling user message through orchestrator...")
         queryType   = self._classifyQuery(user_message)
         if queryType == 'greetings_and_bye':
             reply = self.components.generator.generateSimpleResponse(user_message, queryType=queryType)
@@ -120,19 +120,17 @@ class ChatOrchestrator:
         user_state  = self._analyze(user_message)
         _           = self._embed(user_message )
         retrieved   = self._retrieve(user_message, top_k=top_k , queryType=queryType)
-        context     = self._buildContext(user_message, retrieved, user_state , queryType=queryType)
+        context     = self._buildGeneratorContext(user_message, retrieved, user_state , queryType=queryType)
         reply       = self._generate(context)
-        final_reply, _ = self._verify(reply, user_state)
-
-        self.state = OrchestrationState.COMPLETED
-        return final_reply
+        
+        return reply, None
 
     def handleUserMessageWithVerification(
         self,
         user_message: str,
         top_k: int = 5,
     ) -> Tuple[str, Optional[AggregatedVerificationResult]]:
-
+        print("Handling user message with verification through orchestrator...")
         queryType   = self._classifyQuery(user_message)
 
 
@@ -145,7 +143,7 @@ class ChatOrchestrator:
         _           = self._embed(user_message)
         retrieved   = self._retrieve(user_message, top_k=top_k , queryType=queryType)
         print(f"the retrieved docs are : {retrieved}")
-        context     = self._buildContext(user_message, retrieved, user_state , queryType=queryType)
+        context     = self._buildGeneratorContext(user_message, retrieved, user_state , queryType=queryType)
         print(f"the context for generation is : {context.format_context_for_prompt()}")
         reply       = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state)

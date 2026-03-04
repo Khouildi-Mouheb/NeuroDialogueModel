@@ -7,7 +7,7 @@ from adapters.generation.generatorAgent import GeneratorAgent
 
 class LocalBasedGenerator(GeneratorAgent):
 
-    def __init__(self, model_name: str = "deepseek-r1:7b"):
+    def __init__(self, model_name: str = "gemma3:4b"):
         self.model_name = model_name
         self.base_url = "http://127.0.0.1:11434/api/generate"
 

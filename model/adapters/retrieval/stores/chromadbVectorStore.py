@@ -7,7 +7,7 @@ from domain.ports.vectorStorePort import VectorStorePort
 class ChromaDBVectorStore(VectorStorePort):
     def __init__(
         self,
-        collection_name: str = "documents",
+        collection_name: str = "neurodialogue",
         persist_directory: str | None = None
     ):
         if persist_directory is None:

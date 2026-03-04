@@ -5,6 +5,7 @@ from adapters.analysis.emotionDetectionAgent import EmotionDetectionAgent
 from adapters.analysis.intentAndNeedsAgent import IntentNeedsAgent
 from adapters.analysis.queryClassifierAdapter import QueryClassifierAdapter
 from adapters.generation.cloudBasedGenerator import CloudBasedGenerator
+from adapters.generation.localBasedGenerator import LocalBasedGenerator
 from adapters.retrieval.agents.queryRetriever import QueryRetriever
 from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 from adapters.retrieval.stores.chromadbVectorStore import ChromaDBVectorStore
@@ -35,6 +36,7 @@ class ModelFactory:
                                 vector_store=vector_store,
                                 embedding_model=embedding_model,
                               ),
+            #generator       = LocalBasedGenerator(),
             generator       = CloudBasedGenerator(),
             analysis_agents = [
                                 EmotionDetectionAgent(),

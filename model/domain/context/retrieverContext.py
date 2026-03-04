@@ -33,3 +33,6 @@ class RetieverContext(Context):
             self.setEmbeddedQuery()
             return self.__embeddedQuery
         
+    def format_context_for_retrieve(self) -> str:
+        pass
+        

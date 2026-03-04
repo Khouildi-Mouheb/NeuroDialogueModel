@@ -2,7 +2,7 @@ from typing import Any, List, Dict, Optional
 from domain.ports.vectorStorePort import VectorStorePort
 from adapters.retrieval.embedding.embeddingModel import EmbeddingModel
 from adapters.retrieval.agents.retrievalAgent import RetrievalAgent
-
+from domain.context.retrieverContext import RetieverContext
 
 class QueryRetriever(RetrievalAgent):
     """Retrieves relevant document chunks for a user query.
@@ -38,12 +38,19 @@ class QueryRetriever(RetrievalAgent):
 
         query_embedding = self.embedding_model.embedText(query)
 
-        raw_results = self.vector_store.query_vectors(
+        typeQueryResults = self.vector_store.query_vectors(
             query_vector=query_embedding,
             top_k=top_k,
             collection=queryType,
             filters=filters,
         )
+        globalResults = self.vector_store.query_vectors(
+            query_vector=query_embedding,
+            top_k=top_k,
+            collection="neurodialogue",
+            filters=filters,
+        )
+        raw_results = typeQueryResults + globalResults
 
         return [
             {
@@ -57,7 +64,12 @@ class QueryRetriever(RetrievalAgent):
             for i, result in enumerate(raw_results)
         ]
 
-    def retrieveWithContext(self, query: str, top_k: int = 5) -> str:
+    def retrieveWithContext(self,
+        context: RetieverContext,
+        top_k: int = 5,
+        queryType: Optional[str] = None,
+        filters: Optional[Dict[str, Any]] = None,
+        ) -> List[Dict[str, Any]]:
         """Retrieve and format results as a context string for the LLM.
 
         Args:
@@ -67,7 +79,11 @@ class QueryRetriever(RetrievalAgent):
         Returns:
             Formatted context string ready to be injected into a prompt.
         """
-        results = self.retrieve(query, top_k)
+        results = self.retrieve(context.format_context_for_retrieve(), 
+                                top_k,
+                                queryType=queryType,
+                                filters=filters
+                                )
 
         context_parts = [
             f"[Document {r['rank']}] (Source: {r['source']})\n{r['text']}"
