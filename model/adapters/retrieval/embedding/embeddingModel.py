@@ -19,7 +19,7 @@ class EmbeddingModel:
         self.model = SentenceTransformer(model_name)
         self.model_name = model_name
         self.dimension = self.model.get_sentence_embedding_dimension()
-        print(f"✅ Loaded embedding model: {model_name} ({self.dimension} dimensions)")
+        print(f" Loaded embedding model: {model_name} ({self.dimension} dimensions)")
     
     def embedDocument(self, document: Document) -> Document:
         """
