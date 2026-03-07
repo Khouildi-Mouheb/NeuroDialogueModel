@@ -42,19 +42,9 @@ class EmbeddingOrchestrator:
         print(f"  [INDEXING] storing in vector store...")
         return self.components.indexer.indexDocument(document)
 
-    # ------------------------------------------------------------------ #
-    # Public API                                                           #
-    # ------------------------------------------------------------------ #
 
     def indexDocument(self, source: str) -> int:
-        """Run the full pipeline for a single document.
-
-        Args:
-            source: File path or URL to the document.
-
-        Returns:
-            Number of chunks indexed.
-        """
+        
         print(f"\n  Starting indexing pipeline for: {source}")
 
         document   = self._load(source)

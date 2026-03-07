@@ -51,6 +51,21 @@ class QueryRetriever(RetrievalAgent):
             filters=filters,
         )
         raw_results = typeQueryResults + globalResults
+        
+
+        seen_ids = set()
+        unique_results = []
+        for r in raw_results:
+            if r.get("id") not in seen_ids:
+                seen_ids.add(r.get("id"))
+                unique_results.append(r)
+        raw_results = unique_results
+
+        raw_results = sorted(
+        raw_results,
+        key=lambda x: 1 - x.get("distance", 1),
+        reverse=True
+        )
 
         return [
             {

@@ -44,6 +44,7 @@ class ChromaDBVectorStore(VectorStorePort):
         
         if collection:
             try:
+                print(f"-------------------------{collection}-------------------------")
                 active_collection = self.client.get_collection(collection)
             except Exception:
                 print(f"  Collection '{collection}' not found, falling back to default '{self.collection.name}'")
@@ -54,7 +55,6 @@ class ChromaDBVectorStore(VectorStorePort):
             n_results=top_k,
             where=filters if filters else None
         )
-
         return [
             {
                 "id": results["ids"][0][i],

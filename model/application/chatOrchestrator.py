@@ -47,7 +47,9 @@ class ChatOrchestrator:
                   top_k: int = 5,
                   queryType: Optional[str] = None) -> list:
         self.state = OrchestrationState.RETRIEVING
-        return self.components.retriever.retrieve(user_message, top_k=top_k, queryType=queryType)
+        return self.components.retriever.retrieve(user_message, 
+                                                  top_k=top_k, 
+                                                  queryType=queryType)
 
     def _buildGeneratorContext(
         self,
@@ -114,8 +116,7 @@ class ChatOrchestrator:
         queryType   = self._classifyQuery(user_message)
         if queryType == 'greetings_and_bye':
             reply = self.components.generator.generateSimpleResponse(user_message, queryType=queryType)
-            final_reply, aggregated = self._verify(reply, user_state)
-            return final_reply, aggregated
+            return reply, None
         
         user_state  = self._analyze(user_message)
         _           = self._embed(user_message )
@@ -137,7 +138,7 @@ class ChatOrchestrator:
         if queryType == 'greetings_and_bye':
             reply = self.components.generator.generateSimpleResponse(user_message, queryType=queryType)
             final_reply, aggregated = self._verify(reply)
-            return final_reply, None
+            return final_reply, aggregated
         
         user_state  = self._analyze(user_message)
         _           = self._embed(user_message)
