@@ -175,8 +175,8 @@ class ChatOrchestrator:
         reply = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state);
         
-        if message_count > 0 and message_count % 20 == 0:
-            self._summarize(user_id, chat_id, history)
+
+        self._summarize(user_id, chat_id, history)
 
         self.state = OrchestrationState.COMPLETED
         return final_reply, aggregated

@@ -1,6 +1,5 @@
-# adapters/memory/memoryAdapter.py
 from domain.ports.memoryPort import MemoryPort
-from .database import SessionLocal
+from domain.memory.database import SessionLocal
 from domain.memory.models import ConversationMemory
 from typing import Optional
 import datetime
