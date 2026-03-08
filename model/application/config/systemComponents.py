@@ -28,6 +28,8 @@ class SystemComponents:
     indexer:      Any = None           
     vector_store: Any = None           
 
+    memoryAdapter: Any = None
+
     def __post_init__(self):
         if self.verifiers and len(self.verifiers) not in (0, 3):
             raise ValueError("verifiers must be empty or exactly 3 — [Empathy, Appropriateness, Safety]")

@@ -50,6 +50,7 @@ async def chat(request: Request):
     from presentation.routers.chatRouter import ChatRequest, chat as chat_handler
     body = await request.json()
     chat_request = ChatRequest(**body)
+    print(f"-----------------------------\n[App] Received chat request: \"{body}\"-------------------------------------------")
     return await chat_handler(chat_request, orchestrator=chat_orchestrator)
 
 

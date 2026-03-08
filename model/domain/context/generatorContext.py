@@ -4,19 +4,23 @@ from domain.entities.query.userQuery import UserQuery
 from domain.entities.knowledge.chunk import Chunk
 from domain.services.userState import UserState
 from domain.entities.query.rewrittenQuery import RewrittenQuery
-from typing import List
+from typing import List , Optional
 
 class GeneratorContext(Context):
     def __init__(self, 
-                 user_query: UserQuery =None, 
-                 retrieved_chunks: List[Chunk] = None, 
-                 user_state: UserState = None , 
-                 rewritten_query: RewrittenQuery = None
-                 ):
+                user_query: UserQuery = None, 
+                retrieved_chunks: List[Chunk] = None, 
+                user_state: UserState = None, 
+                rewritten_query: RewrittenQuery = None,
+                history: Optional[List[dict]] = None,      
+                summary: Optional[str] = None              
+                ):
         self.user_query = user_query
         self.retrieved_chunks = retrieved_chunks
         self.user_state = user_state
         self.rewritten_query = rewritten_query
+        self.history = history      
+        self.summary = summary     
     
     def get_user_query(self) -> UserQuery:
         return self.user_query
@@ -60,6 +64,17 @@ class GeneratorContext(Context):
         context_parts.append(f"Original Query   : {self.user_query}")
         if self.rewritten_query and self.rewritten_query != self.user_query:
             context_parts.append(f"Rewritten Query  : {self.rewritten_query}")
+
+        if self.summary:
+            context_parts.append("── Conversation Summary ──")
+            context_parts.append(self.summary)
+
+        if self.history:
+            context_parts.append("── Recent Conversation ──")
+            for msg in self.history:
+                role = msg.get("role", "unknown").capitalize()
+                content = msg.get("content", "")
+                context_parts.append(f"{role}: {content}")
 
         if self.retrieved_chunks:
             context_parts.append("── Retrieved Documents ──")

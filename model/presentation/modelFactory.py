@@ -16,6 +16,7 @@ from adapters.retrieval.indexers.documentIndexer import DocumentIndexer
 from adapters.verification.empathyVerificator import EmpathyVerificator
 from adapters.verification.appropriatenessVerificator import AppropriatenessVerificator
 from adapters.verification.safetyVerificator import SafetyVerificator
+from adapters.memory.memoryAdapter import PostgresMemoryAdapter 
 
 
 COLLECTION_NAME = "neurodialogue"  
@@ -48,6 +49,7 @@ class ModelFactory:
                                 AppropriatenessVerificator(),
                                 SafetyVerificator(),
                                ],
+            memoryAdapter=PostgresMemoryAdapter(),
         )
 
         print("  [ModelFactory] ChatOrchestrator ready ✓")

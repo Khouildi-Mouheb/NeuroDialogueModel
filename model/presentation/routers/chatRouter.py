@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,25 +8,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-
-
 class ChatRequest(BaseModel):
-    text: str                        
+    text: str
+    user_id: str
+    chat_id: str
+    history: List[dict] = []
+    message_count: int = 0
 
 class ChatResponse(BaseModel):
-    status: str                      
-    data: str                        
+    status: str
+    data: str
     error: Optional[str] = None
-    analysis: Optional[dict] = None  
-
+    analysis: Optional[dict] = None
 
 
 @router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest, orchestrator=None):
-    """
-    Receive user message from Django, run full pipeline,
-    return reply in the format Django expects.
-    """
     logger.info(f"  [ChatRouter] Received: \"{request.text}\"")
 
     if not request.text or not request.text.strip():
@@ -34,7 +31,11 @@ async def chat(request: ChatRequest, orchestrator=None):
 
     try:
         reply, aggregated = orchestrator.handleUserMessageWithVerification(
-            request.text,
+            user_message=request.text,
+            user_id=request.user_id,
+            chat_id=request.chat_id,
+            history=request.history,
+            message_count=request.message_count,
             top_k=5,
         )
 
