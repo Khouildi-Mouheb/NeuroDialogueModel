@@ -36,6 +36,11 @@ embedding_orchestrator = None
 async def startup():
     global chat_orchestrator, embedding_orchestrator
 
+    logger.info("  [Startup] Initialising memory database...")
+    from domain.memory.database import init_db
+    init_db()
+    logger.info("  [Startup] Memory database ready ✓")
+
     logger.info("  [Startup] Building ChatOrchestrator...")
     chat_orchestrator = ModelFactory.buildChatOrchestrator()
 

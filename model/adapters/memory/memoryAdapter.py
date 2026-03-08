@@ -22,7 +22,7 @@ class PostgresMemoryAdapter(MemoryPort):
             ).first()
             if record:
                 record.summary = summary
-                record.updated_at = datetime.utcnow()
+                record.updated_at = datetime.datetime.utcnow()
             else:
                 session.add(ConversationMemory(
                     user_id=user_id,
