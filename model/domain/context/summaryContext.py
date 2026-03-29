@@ -14,8 +14,9 @@ class SummaryContext(Context):
 
         context_parts.append(
             "You are summarizing a coaching conversation.\n"
-            "Your goal is to extract the key emotional themes, psychological needs, and topics discussed.\n"
+            "Your goal is to extract key emotional themes, psychological needs, and persistent user insights.\n"
             "Integrate new information into the existing summary while maintaining the core context of the user's journey.\n"
+            "Identify 'Persistent Insights': stable facts about the user (e.g., career, family, core values) and recurring strengths.\n"
             "Be concise and neutral. Keep the summary under 100 words."
         )
 
@@ -33,8 +34,10 @@ class SummaryContext(Context):
         context_parts.append(
             "── Instructions ──\n"
             "- Write a concise summary of the conversation so far.\n"
-            "- Focus on emotional themes, expressed needs, and coaching topics.\n"
+            "- Section 1: Narrative Summary (Current focus and emotional state).\n"
+            "- Section 2: Persistent Insights (Key facts, strengths, and long-term goals).\n"
             "- Do not fabricate anything not present in the messages.\n"
+            "- Ensure 'Persistent Insights' are carried over from the previous summary if still relevant.\n"
             "- Keep it under 100 words."
         )
 

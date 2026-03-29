@@ -13,14 +13,16 @@ class GeneratorContext(Context):
                 user_state: UserState = None, 
                 rewritten_query: RewrittenQuery = None,
                 history: Optional[List[dict]] = None,      
-                summary: Optional[str] = None              
+                summary: Optional[str] = None,
+                user_profile: Optional[str] = None
                 ):
         self.user_query = user_query
         self.retrieved_chunks = retrieved_chunks
         self.user_state = user_state
         self.rewritten_query = rewritten_query
         self.history = history      
-        self.summary = summary     
+        self.summary = summary
+        self.user_profile = user_profile
     
     def get_user_query(self) -> UserQuery:
         return self.user_query
@@ -43,8 +45,7 @@ class GeneratorContext(Context):
         "This means: lead with strengths, acknowledge what the user is already doing well, use positive and forward-focused language,\n"
         "and help the user discover their own capacities and resources rather than focusing on deficits or problems.\n"
         "Answer ONLY based on the retrieved documents below.\n"
-        "If no relevant documents are found, provide a brief, strengths-focused, and empathetic 2-line response."
-        )
+        "If no relevant documents are found, provide a detailed, strengths-focused, and deeply empathetic coaching response.")
 
         if self.user_state:
             emotions   = getattr(self.user_state, "emotions", None)
@@ -64,6 +65,10 @@ class GeneratorContext(Context):
         context_parts.append(f"Original Query   : {self.user_query}")
         if self.rewritten_query and self.rewritten_query != self.user_query:
             context_parts.append(f"Rewritten Query  : {self.rewritten_query}")
+
+        if self.user_profile:
+            context_parts.append("── User Profile (Long-term) ──")
+            context_parts.append(self.user_profile)
 
         if self.summary:
             context_parts.append("── Conversation Summary ──")
@@ -97,7 +102,7 @@ class GeneratorContext(Context):
         "- Open with what the user is doing right or the courage it takes to reach out.\n"
         "- Use forward-focused, generative language (e.g. 'What might help...' rather than 'You should avoid...').\n"
         "- Invite reflection rather than prescribing solutions (e.g. 'What has worked for you before?').\n"
-        "- Be empathetic and concise.\n"
+        "- Be empathetic, detailed, and comprehensive in your reflection.\n"
         "- Ground your response in the retrieved documents.\n"
         "- If the user seems distressed, acknowledge their feelings first before moving to strengths.\n"
         "- Never fabricate information.\n"

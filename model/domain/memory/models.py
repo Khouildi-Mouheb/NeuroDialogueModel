@@ -9,4 +9,5 @@ class ConversationMemory(Base):
     user_id    = Column(String, nullable=False, index=True)
     chat_id    = Column(String, nullable=False, index=True)
     summary    = Column(Text, nullable=True)
+    profile    = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow)

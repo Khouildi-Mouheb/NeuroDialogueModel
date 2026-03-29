@@ -1,3 +1,4 @@
+import json
 from typing import Optional, Tuple, List
 from domain.services.userState import UserState
 from domain.enums.verificationStatus import VerificationStatus
@@ -55,6 +56,7 @@ class ChatOrchestrator:
         queryType: Optional[str] = None,
         history: Optional[List[dict]] = None,
         summary: Optional[str] = None,
+        user_profile: Optional[str] = None,
     ) -> GeneratorContext:
         self.state = OrchestrationState.PROMPTING
         user_query = UserQuery(
@@ -66,6 +68,7 @@ class ChatOrchestrator:
             user_state=user_state,
             history=history,
             summary=summary,
+            user_profile=user_profile,
         )
 
     def _generate(self, context: GeneratorContext) -> str:
@@ -110,14 +113,25 @@ class ChatOrchestrator:
         history: List[dict],
     ) -> None:
         existing_summary = self.components.memoryAdapter.getSummary(user_id, chat_id)
+        existing_profile = self.components.memoryAdapter.getProfile(user_id, chat_id)
+        
+        # Combine summary and profile for context if needed
+        combined_context = f"{existing_summary}\n{existing_profile}" if existing_profile else existing_summary
+
         summary_context = SummaryContext(
             history=history,
-            existing_summary=existing_summary
+            existing_summary=combined_context
         )
-        new_summary = self.components.generator.generateSimpleResponse(
+        new_memory_raw = self.components.generator.generateSimpleResponse(
             summary_context.format_context_for_prompt()
         )
-        self.components.memoryAdapter.updateSummary(user_id, chat_id, new_summary)
+
+        # Basic parsing of the LLM output based on the sections defined in SummaryContext
+        parts = new_memory_raw.split("Section 2:")
+        summary_text = parts[0].replace("Section 1:", "").strip()
+        profile_text = parts[1].strip() if len(parts) > 1 else ""
+
+        self.components.memoryAdapter.updateMemory(user_id, chat_id, summary_text, profile_text)
 
     def handleUserMessage(
         self,
@@ -158,6 +172,7 @@ class ChatOrchestrator:
 
         # load memory
         summary = self.components.memoryAdapter.getSummary(user_id, chat_id)
+        profile = self.components.memoryAdapter.getProfile(user_id, chat_id)
 
         user_state = self._analyze(user_message)
         _          = self._embed(user_message)
@@ -169,6 +184,7 @@ class ChatOrchestrator:
             queryType=queryType,
             history=history,
             summary=summary,
+            user_profile=profile
         )
         print(f"the context for generation is : {context.format_context_for_prompt()}")
 
@@ -178,6 +194,39 @@ class ChatOrchestrator:
         # Only summarize if there is history to summarize and at specific intervals
         if message_count > 0 and message_count % 20 == 0:  
             self._summarize(user_id, chat_id, history)
+
+        # --- TEMPORARY ENHANCED JSON EXPORT FOR PROFESSOR ---
+        export_data = {
+            "user_id": user_id,
+            "chat_id": chat_id,
+            "message_count": message_count,
+            "current_summary": summary,
+            "persistent_profile": profile,
+            "analysis_metadata": {
+                "detected_emotions": str(user_state.emotions) if user_state and user_state.emotions else [],
+                "detected_intents": user_state.intents if user_state and user_state.intents else [],
+                "detected_needs": user_state.needs if user_state and user_state.needs else [],
+                "verification": {
+                    "status": aggregated.status.value if aggregated else "N/A",
+                    "scores": aggregated.all_scores if aggregated else {}
+                }
+            },
+            "conversation_history": history + [
+                {"role": "user", "content": user_message},
+                {"role": "assistant", "content": final_reply}
+            ]
+        }
+        with open(f"conversation_export_{chat_id}.json", "w") as f:
+            json.dump(export_data, f, indent=4)
+
+        # --- ADDITIONAL EXPORT: MESSAGE AND RESPONSE ONLY ---
+        simple_export = {
+            "user": user_message,
+            "assistant": final_reply
+        }
+        with open(f"message_response_{chat_id}.json", "w") as f:
+            json.dump(simple_export, f, indent=4)
+        # -------------------------------------------
 
         self.state = OrchestrationState.COMPLETED
         return final_reply, aggregated

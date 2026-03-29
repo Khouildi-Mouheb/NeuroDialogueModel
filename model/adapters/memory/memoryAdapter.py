@@ -6,7 +6,7 @@ import datetime
 
 class PostgresMemoryAdapter(MemoryPort):
 
-    def getSummary(self, user_id: int, chat_id: int) -> Optional[str]:
+    def getSummary(self, user_id: str, chat_id: str) -> Optional[str]:
         with SessionLocal() as session:
             record = session.query(ConversationMemory).filter_by(
                 user_id=user_id,
@@ -14,7 +14,15 @@ class PostgresMemoryAdapter(MemoryPort):
             ).first()
             return record.summary if record else None
 
-    def updateSummary(self, user_id: int, chat_id: int, summary: str) -> None:
+    def getProfile(self, user_id: str, chat_id: str) -> Optional[str]:
+        with SessionLocal() as session:
+            record = session.query(ConversationMemory).filter_by(
+                user_id=user_id,
+                chat_id=chat_id
+            ).first()
+            return record.profile if record else None
+
+    def updateSummary(self, user_id: str, chat_id: str, summary: str) -> None:
         with SessionLocal() as session:
             record = session.query(ConversationMemory).filter_by(
                 user_id=user_id,
@@ -28,5 +36,24 @@ class PostgresMemoryAdapter(MemoryPort):
                     user_id=user_id,
                     chat_id=chat_id,
                     summary=summary
+                ))
+            session.commit()
+
+    def updateMemory(self, user_id: str, chat_id: str, summary: str, profile: str) -> None:
+        with SessionLocal() as session:
+            record = session.query(ConversationMemory).filter_by(
+                user_id=user_id,
+                chat_id=chat_id
+            ).first()
+            if record:
+                record.summary = summary
+                record.profile = profile
+                record.updated_at = datetime.datetime.utcnow()
+            else:
+                session.add(ConversationMemory(
+                    user_id=user_id,
+                    chat_id=chat_id,
+                    summary=summary,
+                    profile=profile
                 ))
             session.commit()

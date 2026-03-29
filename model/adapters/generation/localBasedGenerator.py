@@ -22,7 +22,7 @@ class LocalBasedGenerator(GeneratorAgent):
                     "model": self.model_name,
                     "prompt": prompt,
                     "stream": True,
-                    "options": {"num_predict": 300},
+                    "options": {"num_predict": 2000},
                 },
                 stream=True,
                 timeout=600,
