@@ -15,6 +15,7 @@ class SummaryContext(Context):
         context_parts.append(
             "You are summarizing a coaching conversation.\n"
             "Your goal is to extract the key emotional themes, psychological needs, and topics discussed.\n"
+            "Integrate new information into the existing summary while maintaining the core context of the user's journey.\n"
             "Be concise and neutral. Keep the summary under 100 words."
         )
 

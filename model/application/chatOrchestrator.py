@@ -173,9 +173,10 @@ class ChatOrchestrator:
         print(f"the context for generation is : {context.format_context_for_prompt()}")
 
         reply = self._generate(context)
-        final_reply, aggregated = self._verify(reply, user_state);
+        final_reply, aggregated = self._verify(reply, user_state)
         
-        if message_count % 20== 0:  
+        # Only summarize if there is history to summarize and at specific intervals
+        if message_count > 0 and message_count % 20 == 0:  
             self._summarize(user_id, chat_id, history)
 
         self.state = OrchestrationState.COMPLETED
