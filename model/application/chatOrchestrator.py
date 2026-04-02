@@ -9,6 +9,8 @@ from domain.context.summaryContext import SummaryContext
 from domain.entities.query.userQuery import UserQuery
 from application.config.systemComponents import SystemComponents
 
+import os
+
 
 class ChatOrchestrator:
 
@@ -85,17 +87,21 @@ class ChatOrchestrator:
         if len(self.components.verifiers) < 3:
             return reply, None
 
-        empathy_result         = self.components.verifiers[0].verify(reply, user_state=user_state)
-        print(f"the empathy result is : {empathy_result}")
-        appropriateness_result = self.components.verifiers[1].verify(reply, user_state=user_state)
-        print(f"the appropriateness result is : {appropriateness_result}")
-        safety_result          = self.components.verifiers[2].verify(reply, user_state=user_state)
-        print(f"the safety result is : {safety_result}")
+        # Refactored to avoid index-based fragility
+        results = {}
+        for verifier in self.components.verifiers:
+            res = verifier.verify(reply, user_state=user_state)
+            # Map results based on class name or an internal 'category' attribute
+            name = verifier.__class__.__name__.lower()
+            if "empathy" in name: results['empathy'] = res
+            elif "appropriateness" in name: results['appropriateness'] = res
+            elif "safety" in name: results['safety'] = res
+            print(f"Verifier {name} result: {res.status}")
 
         aggregated = AggregatedVerificationResult(
-            empathy=empathy_result,
-            appropriateness=appropriateness_result,
-            safety=safety_result,
+            empathy=results.get('empathy'),
+            appropriateness=results.get('appropriateness'),
+            safety=results.get('safety'),
         )
 
         if aggregated.status == VerificationStatus.REJECTED:
@@ -195,38 +201,42 @@ class ChatOrchestrator:
         if message_count > 0 and message_count % 20 == 0:  
             self._summarize(user_id, chat_id, history)
 
-        # --- TEMPORARY ENHANCED JSON EXPORT FOR PROFESSOR ---
+        self._export_debug_logs(user_id, chat_id, message_count, summary, profile, user_state, aggregated, history, user_message, final_reply)
+
+        self.state = OrchestrationState.COMPLETED
+        return final_reply, aggregated
+
+    def _export_debug_logs(self, user_id, chat_id, message_count, summary, profile, user_state, aggregated, history, user_message, final_reply):
+        """Encapsulated export logic to keep the main flow clean."""
         export_data = {
             "user_id": user_id,
             "chat_id": chat_id,
             "message_count": message_count,
             "current_summary": summary,
             "persistent_profile": profile,
-            "analysis_metadata": {
-                "detected_emotions": str(user_state.emotions) if user_state and user_state.emotions else [],
-                "detected_intents": user_state.intents if user_state and user_state.intents else [],
-                "detected_needs": user_state.needs if user_state and user_state.needs else [],
-                "verification": {
-                    "status": aggregated.status.value if aggregated else "N/A",
-                    "scores": aggregated.all_scores if aggregated else {}
-                }
-            },
+            "analysis_metadata": self._build_metadata_dict(user_state, aggregated),
             "conversation_history": history + [
                 {"role": "user", "content": user_message},
                 {"role": "assistant", "content": final_reply}
             ]
         }
-        with open(f"conversation_export_{chat_id}.json", "w") as f:
-            json.dump(export_data, f, indent=4)
+        
+        try:
+            with open(f"conversation_export_{chat_id}.json", "w") as f:
+                json.dump(export_data, f, indent=4)
+            
+            with open(f"message_response_{chat_id}.json", "w") as f:
+                json.dump({"user": user_message, "assistant": final_reply}, f, indent=4)
+        except IOError as e:
+            print(f"Failed to export debug logs: {e}")
 
-        # --- ADDITIONAL EXPORT: MESSAGE AND RESPONSE ONLY ---
-        simple_export = {
-            "user": user_message,
-            "assistant": final_reply
+    def _build_metadata_dict(self, user_state, aggregated):
+        return {
+            "detected_emotions": str(user_state.emotions) if user_state and user_state.emotions else [],
+            "detected_intents": user_state.intents if user_state and user_state.intents else [],
+            "detected_needs": user_state.needs if user_state and user_state.needs else [],
+            "verification": {
+                "status": aggregated.status.value if aggregated else "N/A",
+                "scores": aggregated.all_scores if aggregated else {}
+                }
         }
-        with open(f"message_response_{chat_id}.json", "w") as f:
-            json.dump(simple_export, f, indent=4)
-        # -------------------------------------------
-
-        self.state = OrchestrationState.COMPLETED
-        return final_reply, aggregated
