@@ -57,7 +57,7 @@ class CloudBasedGenerator(GeneratorAgent):
                 model=self.model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
-                max_tokens=300,
+                max_tokens=3000,
                 stream=False,
             )
             return completion.choices[0].message.content.strip()

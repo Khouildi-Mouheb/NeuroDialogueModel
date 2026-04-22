@@ -133,9 +133,11 @@ class ChatOrchestrator:
         )
 
         # Basic parsing of the LLM output based on the sections defined in SummaryContext
-        parts = new_memory_raw.split("Section 2:")
-        summary_text = parts[0].replace("Section 1:", "").strip()
-        profile_text = parts[1].strip() if len(parts) > 1 else ""
+        # Improved: Use case-insensitive splitting and handle missing sections gracefully
+        import re
+        parts = re.split(r"Section\s*2[:\-]", new_memory_raw, flags=re.IGNORECASE)
+        summary_text = re.sub(r"Section\s*1[:\-]", "", parts[0], flags=re.IGNORECASE).strip()
+        profile_text = parts[1].strip() if len(parts) > 1 else "No profile data extracted."
 
         self.components.memoryAdapter.updateMemory(user_id, chat_id, summary_text, profile_text)
 
@@ -156,6 +158,9 @@ class ChatOrchestrator:
         retrieved  = self._retrieve(user_message, top_k=top_k, queryType=queryType)
         context    = self._buildGeneratorContext(user_message, retrieved, user_state, queryType=queryType)
         reply      = self._generate(context)
+
+        # Suggestion: Also export logs here so simple messages are tracked
+        self._export_debug_logs(None, "default_chat", 0, None, None, user_state, None, [], user_message, reply)
 
         return reply, None
 
@@ -222,10 +227,13 @@ class ChatOrchestrator:
         }
         
         try:
-            with open(f"conversation_export_{chat_id}.json", "w") as f:
+            log_dir = "logs"
+            os.makedirs(log_dir, exist_ok=True)
+            
+            with open(os.path.join(log_dir, f"conversation_export_{chat_id}.json"), "w") as f:
                 json.dump(export_data, f, indent=4)
             
-            with open(f"message_response_{chat_id}.json", "w") as f:
+            with open(os.path.join(log_dir, f"message_response_{chat_id}.json"), "w") as f:
                 json.dump({"user": user_message, "assistant": final_reply}, f, indent=4)
         except IOError as e:
             print(f"Failed to export debug logs: {e}")
