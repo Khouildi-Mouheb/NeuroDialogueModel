@@ -1,5 +1,5 @@
 from domain.ports.memoryPort import MemoryPort
-from domain.memory.database import SessionLocal
+from domain.memory.database import get_session
 from domain.memory.models import (
     ConversationMemory,
     UserProfile,
@@ -8,7 +8,8 @@ from domain.memory.models import (
     UserEmotion,
     CoachingSession,
 )
-from domain.memory.enums import CoachingStage, TagPriority
+from domain.memory.enums.coachingStage import CoachingStage
+from domain.memory.enums.tagPriority import TagPriority
 from typing import Optional
 import datetime
 
@@ -20,21 +21,21 @@ class PostgresMemoryAdapter(MemoryPort):
     # -------------------------------------------------------------------------
 
     def getSummary(self, user_id: str, chat_id: str) -> Optional[str]:
-        with SessionLocal() as session:
+        with get_session() as session:
             record = session.query(ConversationMemory).filter_by(
                 user_id=user_id, chat_id=chat_id
             ).first()
             return record.summary if record else None
 
     def getProfile(self, user_id: str, chat_id: str) -> Optional[str]:
-        with SessionLocal() as session:
+        with get_session() as session:
             record = session.query(ConversationMemory).filter_by(
                 user_id=user_id, chat_id=chat_id
             ).first()
             return record.profile if record else None
 
     def updateMemory(self, user_id: str, chat_id: str, summary: str, profile: str) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             record = session.query(ConversationMemory).filter_by(
                 user_id=user_id, chat_id=chat_id
             ).first()
@@ -54,7 +55,7 @@ class PostgresMemoryAdapter(MemoryPort):
     # -------------------------------------------------------------------------
 
     def getUserProfile(self, user_id: str) -> Optional[UserProfile]:
-        with SessionLocal() as session:
+        with get_session() as session:
             return session.query(UserProfile).filter_by(user_id=user_id).first()
 
     def upsertUserProfile(
@@ -67,15 +68,15 @@ class PostgresMemoryAdapter(MemoryPort):
         personalityType: Optional[str] = None,
         coachingStage: Optional[CoachingStage] = None,
     ) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             record = session.query(UserProfile).filter_by(user_id=user_id).first()
             if record:
-                if summary                   is not None: record.summary                   = summary
-                if profile                   is not None: record.profile                   = profile
+                if summary                    is not None: record.summary                    = summary
+                if profile                    is not None: record.profile                    = profile
                 if preferedCommunicationStyle is not None: record.preferedCommunicationStyle = preferedCommunicationStyle
-                if emotionalStabilityScore   is not None: record.emotionalStabilityScore   = emotionalStabilityScore
-                if personalityType           is not None: record.personalityType           = personalityType
-                if coachingStage             is not None: record.coachingStage             = coachingStage.value
+                if emotionalStabilityScore    is not None: record.emotionalStabilityScore    = emotionalStabilityScore
+                if personalityType            is not None: record.personalityType            = personalityType
+                if coachingStage              is not None: record.coachingStage              = coachingStage.value
                 record.updated_at = datetime.datetime.utcnow()
             else:
                 session.add(UserProfile(
@@ -94,7 +95,7 @@ class PostgresMemoryAdapter(MemoryPort):
     # -------------------------------------------------------------------------
 
     def addStrength(self, user_id: str, emotionLabel: str, frequency: int = 1) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return
@@ -113,7 +114,7 @@ class PostgresMemoryAdapter(MemoryPort):
             session.commit()
 
     def getStrengths(self, user_id: str) -> list:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return []
@@ -124,7 +125,7 @@ class PostgresMemoryAdapter(MemoryPort):
     # -------------------------------------------------------------------------
 
     def addCoachingTag(self, user_id: str, tag: str, priority: TagPriority) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return
@@ -140,7 +141,7 @@ class PostgresMemoryAdapter(MemoryPort):
                 session.commit()
 
     def getCoachingTags(self, user_id: str) -> list:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return []
@@ -151,7 +152,7 @@ class PostgresMemoryAdapter(MemoryPort):
     # -------------------------------------------------------------------------
 
     def addEmotion(self, user_id: str, emotionLabel: str, intensity: Optional[float] = None) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return
@@ -163,11 +164,13 @@ class PostgresMemoryAdapter(MemoryPort):
             session.commit()
 
     def getEmotionHistory(self, user_id: str) -> list:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return []
-            return session.query(UserEmotion).filter_by(userProfileId=profile.id).order_by(UserEmotion.detectedAt).all()
+            return session.query(UserEmotion).filter_by(
+                userProfileId=profile.id
+            ).order_by(UserEmotion.detectedAt).all()
 
     # -------------------------------------------------------------------------
     # CoachingSession
@@ -181,7 +184,7 @@ class PostgresMemoryAdapter(MemoryPort):
         goalFocus: Optional[str] = None,
         outcome: Optional[str] = None,
     ) -> None:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return
@@ -195,10 +198,24 @@ class PostgresMemoryAdapter(MemoryPort):
             session.commit()
 
     def getCoachingSessions(self, user_id: str) -> list:
-        with SessionLocal() as session:
+        with get_session() as session:
             profile = session.query(UserProfile).filter_by(user_id=user_id).first()
             if not profile:
                 return []
             return session.query(CoachingSession).filter_by(
                 userProfileId=profile.id
             ).order_by(CoachingSession.createdAt).all()
+
+    def updateCoachingSession(
+        self,
+        session_id: int,
+        goalFocus: Optional[str] = None,
+        outcome: Optional[str] = None,
+    ) -> None:
+        with get_session() as session:
+            record = session.query(CoachingSession).filter_by(id=session_id).first()
+            if not record:
+                return
+            if goalFocus is not None: record.goalFocus = goalFocus
+            if outcome   is not None: record.outcome   = outcome
+            session.commit()

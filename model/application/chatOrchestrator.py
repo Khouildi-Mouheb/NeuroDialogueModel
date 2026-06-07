@@ -1,4 +1,3 @@
-# ChatOrchestrator
 import re
 import json
 import os
@@ -101,7 +100,7 @@ class ChatOrchestrator:
         for verifier in self.components.verifiers:
             res  = verifier.verify(reply, user_state=user_state)
             name = verifier.__class__.__name__.lower()
-            if "empathy"         in name: results['empathy']         = res
+            if "empathy"           in name: results['empathy']         = res
             elif "appropriateness" in name: results['appropriateness'] = res
             elif "safety"          in name: results['safety']          = res
             print(f"Verifier {name} result: {res.status}")
@@ -167,6 +166,7 @@ class ChatOrchestrator:
         try:
             extracted = json.loads(raw_profile_json.strip().replace("```json", "").replace("```", ""))
             stage_raw = extracted.get("coachingStage")
+
             self.components.memoryAdapter.upsertUserProfile(
                 user_id=user_id,
                 summary=summary_text,
@@ -176,8 +176,21 @@ class ChatOrchestrator:
                 personalityType=extracted.get("personalityType"),
                 coachingStage=CoachingStage(stage_raw) if stage_raw else None,
             )
+
             for tag in extracted.get("coachingTags", []):
                 self.components.memoryAdapter.addCoachingTag(user_id, tag, TagPriority.MEDIUM)
+
+            # Update latest coaching session with goal and outcome
+            sessions = self.components.memoryAdapter.getCoachingSessions(user_id)
+            if sessions:
+                latest  = sessions[-1]
+                tags    = extracted.get("coachingTags", [])
+                self.components.memoryAdapter.updateCoachingSession(
+                    session_id=latest.id,
+                    goalFocus=tags[0] if tags else None,
+                    outcome=summary_text[:200],
+                )
+
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Profile extraction parsing failed: {e}")
 
@@ -188,12 +201,11 @@ class ChatOrchestrator:
     def _export_debug_logs(self, user_id: str, chat_id: str, user_state: UserState,
                            aggregated: Optional[AggregatedVerificationResult],
                            user_message: str, final_reply: str) -> None:
-        memory = self._collect_memory_snapshot(user_id, chat_id)
         export_data = {
             "user_id":           user_id,
             "chat_id":           chat_id,
             "analysis_metadata": self._build_metadata_dict(user_state, aggregated),
-            "memory":            memory,
+            "memory":            self._collect_memory_snapshot(user_id, chat_id),
         }
         try:
             log_dir = "logs"
@@ -206,8 +218,8 @@ class ChatOrchestrator:
             print(f"Failed to export debug logs: {e}")
 
     def _collect_memory_snapshot(self, user_id: str, chat_id: str) -> dict:
-        adapter = self.components.memoryAdapter
-        profile  = adapter.getUserProfile(user_id)
+        adapter   = self.components.memoryAdapter
+        profile   = adapter.getUserProfile(user_id)
         strengths = adapter.getStrengths(user_id)
         tags      = adapter.getCoachingTags(user_id)
         emotions  = adapter.getEmotionHistory(user_id)
@@ -234,8 +246,13 @@ class ChatOrchestrator:
                 for e in emotions
             ],
             "coaching_sessions": [
-                {"chat_id": s.chat_id, "coachingStage": s.coachingStage,
-                 "goalFocus": s.goalFocus, "outcome": s.outcome, "createdAt": str(s.createdAt)}
+                {
+                    "chat_id":      s.chat_id,
+                    "coachingStage": s.coachingStage,
+                    "goalFocus":    s.goalFocus,
+                    "outcome":      s.outcome,
+                    "createdAt":    str(s.createdAt),
+                }
                 for s in sessions
             ],
         }
@@ -246,8 +263,8 @@ class ChatOrchestrator:
             "detected_intents":  user_state.intents       if user_state and user_state.intents  else [],
             "detected_needs":    user_state.needs         if user_state and user_state.needs    else [],
             "verification": {
-                "status": aggregated.status.value  if aggregated else "N/A",
-                "scores": aggregated.all_scores    if aggregated else {},
+                "status": aggregated.status.value if aggregated else "N/A",
+                "scores": aggregated.all_scores   if aggregated else {},
             },
         }
 
@@ -288,6 +305,8 @@ class ChatOrchestrator:
         summary = self.components.memoryAdapter.getSummary(user_id, chat_id)
         profile = self.components.memoryAdapter.getProfile(user_id, chat_id)
 
+        self.components.memoryAdapter.upsertUserProfile(user_id=user_id)
+
         user_state = self._analyze(user_message)
         self._persistUserState(user_id, user_state)
 
@@ -300,12 +319,12 @@ class ChatOrchestrator:
             summary=summary, user_profile=profile,
         )
 
-        reply       = self._generate(context)
+        reply                   = self._generate(context)
         final_reply, aggregated = self._verify(reply, user_state)
 
         self._persistCoachingSession(user_id, chat_id)
 
-        if message_count > 0 and message_count % 20 == 0:
+        if message_count > 0 and message_count % 10 == 0:
             self._summarize(user_id, chat_id, history)
 
         self._export_debug_logs(user_id, chat_id, user_state, aggregated, user_message, final_reply)

@@ -97,3 +97,12 @@ class MemoryPort(ABC):
     @abstractmethod
     def getCoachingSessions(self, user_id: str) -> list:
         pass
+
+    @abstractmethod
+    def updateCoachingSession(
+        self,
+        session_id: int,
+        goalFocus: Optional[str] = None,
+        outcome: Optional[str] = None,
+    ) -> None:
+        pass
