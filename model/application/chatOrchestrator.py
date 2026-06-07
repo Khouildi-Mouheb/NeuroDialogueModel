@@ -122,16 +122,19 @@ class ChatOrchestrator:
     # ------------------------------------------------------------------ #
     # Memory persistence                                                   #
     # ------------------------------------------------------------------ #
-
     def _persistUserState(self, user_id: str, user_state: UserState) -> None:
-        if not user_state:
+        if not user_state or not user_state.emotions:
             return
-        if user_state.emotions:
-            for emotion in user_state.emotions:
-                label     = emotion.get("label") if isinstance(emotion, dict) else str(emotion)
-                intensity = emotion.get("score")  if isinstance(emotion, dict) else None
-                self.components.memoryAdapter.addEmotion(user_id, label, intensity)
-                self.components.memoryAdapter.addStrength(user_id, label, frequency=1)
+        emotion_result = user_state.emotions
+        for label in emotion_result.emotions:
+            intensity = emotion_result.get_score(label)
+            self.components.memoryAdapter.addEmotion(user_id, label, intensity)
+            self.components.memoryAdapter.addStrength(user_id, label, frequency=1)
+
+    def _generateTitle(self, history: List[dict]) -> str:
+        from domain.context.titleGenerationContext import TitleGenerationContext
+        context = TitleGenerationContext(history=history)
+        return self.components.generator.generateTitle(context)
 
     def _persistCoachingSession(self, user_id: str, chat_id: str) -> None:
         profile = self.components.memoryAdapter.getUserProfile(user_id)

@@ -205,3 +205,10 @@ def health():
         "chat_ready":      chat_orchestrator is not None,
         "embedding_ready": embedding_orchestrator is not None,
     }
+
+@app.post("/generate_title/")
+async def generate_title(request: Request):
+    from presentation.routers.chatRouter import TitleRequest, generate_title as title_handler
+    body = await request.json()
+    req = TitleRequest(**body)
+    return await title_handler(req, orchestrator=chat_orchestrator)

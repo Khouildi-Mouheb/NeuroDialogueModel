@@ -21,6 +21,23 @@ class ChatResponse(BaseModel):
     error: Optional[str] = None
     analysis: Optional[dict] = None
 
+class TitleRequest(BaseModel):
+    history: List[dict]
+
+class TitleResponse(BaseModel):
+    title: str
+
+@router.post("/generate_title/", response_model=TitleResponse)
+async def generate_title(request: TitleRequest, orchestrator=None):
+    logger.info("[ChatRouter] Generating chat title...")
+    try:
+        title = orchestrator._generateTitle(request.history)
+        logger.info(f"[ChatRouter] Generated title: \"{title}\"")
+        return TitleResponse(title=title)
+    except Exception as e:
+        logger.error(f"[ChatRouter] Title generation error: {str(e)}", exc_info=True)
+        return TitleResponse(title="New Conversation")
+
 
 @router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest, orchestrator=None):
@@ -63,3 +80,4 @@ async def chat(request: ChatRequest, orchestrator=None):
             data="",
             error=str(e),
         )
+
