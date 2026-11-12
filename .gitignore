@@ -1,42 +1,4 @@
-# Secrets / environment
-.env
-.env.*
-!.env.example
-
-# Virtual environments
-Cenv/
-env/
-venv/
-.venv/
-.Python
-
-# Python cache / build
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.pytest_cache/
-
-# Databases & vector store
-*.sqlite3
-*.sqlite
-*.db
-model/adapters/retrieval/stores/chroma_store/
-
-# Saved models
-my_saved_models/
-
-# Runtime logs (conversation exports may contain user data)
-*.log
-model/logs/
-
-# Local scratch
-CP/
-tests/
-app/LocalChat.py
-
-# Editors / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+# Only README.md and .gitignore are published; everything else stays local.
+*
+!README.md
+!.gitignore
