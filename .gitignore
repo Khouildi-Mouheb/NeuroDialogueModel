@@ -1,4 +1,29 @@
-# Only README.md and .gitignore are published; everything else stays local.
-*
-!README.md
-!.gitignore
+# Publish only model/, README.md and .gitignore; everything else at the root stays local.
+/*
+!/model/
+!/README.md
+!/.gitignore
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Databases & vector store
+*.sqlite3
+*.sqlite
+*.db
+model/adapters/retrieval/stores/chroma_store/
+
+# Saved models
+my_saved_models/
+
+# Runtime logs (conversation exports may contain user data)
+*.log
+model/logs/
