@@ -3,6 +3,7 @@
 !/model/
 !/README.md
 !/.gitignore
+!/requirements.txt
 
 # Secrets / environment
 .env
