@@ -1,55 +1,42 @@
-Cenv/
-
-tests/__pycache__/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-model/.pytest_cache/*
-.pytest_cache/
-*.pyc
-*.pyo
-*.pyd
-
-CP/*
-
-C:\Users\Moi\Desktop\Neurodialogue\chatbotapp\model\adapters\retrieval\stores\chroma_store\chroma.sqlite3
-
-model/adapters/retrieval/stores/chroma_store/*
-model/adapters/retrieval/stores/chroma_store/chroma.sqlite3
-
-# ChromaDB files
-model/adapters/retrieval/stores/chroma_store/
-model/adapters/retrieval/stores/chroma_store/chroma.sqlite3
-model/adapters/retrieval/stores/chroma_store/*.sqlite3
-model/adapters/retrieval/stores/chroma_store/**/*.sqlite3
-model/adapters/retrieval/stores/chroma_store/**/*.parquet
-
-# SQLite databases
-*.sqlite3
-*.db
-*.sqlite
-
-
-tests/
-
-app/LocalChat.py
-
+# Secrets / environment
 .env
+.env.*
+!.env.example
 
-my_saved_models/*
+# Virtual environments
+Cenv/
+env/
+venv/
+.venv/
+.Python
 
-
+# Python cache / build
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-venv/
-.env
-.venv
+.pytest_cache/
+
+# Databases & vector store
+*.sqlite3
+*.sqlite
+*.db
+model/adapters/retrieval/stores/chroma_store/
+
+# Saved models
+my_saved_models/
+
+# Runtime logs (conversation exports may contain user data)
 *.log
+model/logs/
+
+# Local scratch
+CP/
+tests/
+app/LocalChat.py
+
+# Editors / OS
+.vscode/
+.idea/
 .DS_Store
-*.pyc
+Thumbs.db
